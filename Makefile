@@ -14,6 +14,8 @@ help: ## Display this help message
 	@echo "  append-buildx-node      Append additional nodes to the kube-build-farm Buildx instance"
 	@echo "  inspect-buildx-instance Inspect the configuration and status of the kube-build-farm instance"
 	@echo "  clean-buildx-instance   Remove the kube-build-farm Buildx instance for cleanup"
+	@echo "  build-with-timer        Build with a timer and log build details (timestamp, duration, Git commit)"
+	@echo "  build                   Perform a simple build using Buildx (without timer)"
 	@echo ""
 	@echo "Variables:"
 	@echo "  KUBE_VERSION            Kubernetes version to use (default: v1.28.0)"
@@ -39,6 +41,12 @@ build-with-timer:
 	echo "  Git Commit: $$GIT_COMMIT" >> output/build_info.txt; \
 	echo "  Duration: $$BUILD_DURATION seconds" >> output/build_info.txt; \
 	echo "Build info saved to output/build_info.txt"
+
+# Perform a simple build using Buildx (without timer)
+build: ## Perform a simple build using Buildx (without timer)
+	@echo "Starting simple build process..."
+	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build
+	@echo "Build completed."
 
 
 # Default target to create the kube-build-farm instance
