@@ -1,0 +1,36 @@
+FROM golang:1.20 AS builder
+
+ENV ETCD_VERSION=v3.5.9
+ENV GO111MODULE=on
+ENV GOPATH=/go
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+RUN apt-get update && apt-get install -y \
+    make \
+    gcc \
+    git \
+    bash \
+    rsync \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/etcd-io/etcd.git /etcd && \
+    cd /etcd && \
+    git checkout ${ETCD_VERSION}
+
+WORKDIR /etcd
+RUN ./build
+
+RUN ls -l /etcd/bin/
+
+FROM debian:bullseye-slim
+
+RUN apt-get update && apt-get install -y \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /etcd/bin/etcd /usr/local/bin/etcd
+COPY --from=builder /etcd/bin/etcdctl /usr/local/bin/etcdctl
+
+ENTRYPOINT ["etcd"]
+
+CMD ["--help"]

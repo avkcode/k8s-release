@@ -1,0 +1,35 @@
+FROM golang:1.20 AS builder
+
+ENV KUBE_VERSION=v1.28.0
+ENV GO111MODULE=on
+ENV GOPATH=/go
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+RUN apt-get update && apt-get install -y \
+    make \
+    gcc \
+    git \
+    bash \
+    rsync \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/kubernetes/kubernetes.git /kubernetes && \
+    cd /kubernetes && \
+    git checkout ${KUBE_VERSION}
+
+WORKDIR /kubernetes
+RUN make WHAT=cmd/kube-scheduler
+
+RUN ls -l /kubernetes/_output/bin/
+
+FROM debian:bullseye-slim
+
+RUN apt-get update && apt-get install -y \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /kubernetes/_output/bin/kube-scheduler /usr/local/bin/kube-scheduler
+
+ENTRYPOINT ["kube-scheduler"]
+
+CMD ["--help"]

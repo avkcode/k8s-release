@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  kube-proxy-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.kube-proxy
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy && chmod +x /output/kube-proxy"]
+    volumes:
+      - ./output:/output
+
+  kubelet-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.kubelet
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet && chmod +x /output/kubelet"]
+    volumes:
+      - ./output:/output
+
+  etcd-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.etcd
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl && chmod +x /output/etcd /output/etcdctl"]
+    volumes:
+      - ./output:/output
+
+  kube-scheduler-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.kube-scheduler
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler && chmod +x /output/kube-scheduler"]
+    volumes:
+      - ./output:/output
+
+  kube-controller-manager-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.kube-controller-manager
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager && chmod +x /output/kube-controller-manager"]
+    volumes:
+      - ./output:/output
+
+  kube-apiserver-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.kube-apiserver
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver && chmod +x /output/kube-apiserver"]
+    volumes:
+      - ./output:/output
