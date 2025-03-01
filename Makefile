@@ -1,6 +1,25 @@
+# Default target: Display help message
+.DEFAULT_GOAL := help
+
 # Ensure the output directory exists
 all: $(shell mkdir -p output)
-	@$(MAKE) build-with-timer
+
+# Help target: Displays available targets and variables
+help: ## Display this help message
+	@echo "Usage: make <target>"
+	@echo ""
+	@echo "Targets:"
+	@echo "  help                    Display this help message"
+	@echo "  create-buildx-instance  Create the initial kube-build-farm Buildx instance"
+	@echo "  append-buildx-node      Append additional nodes to the kube-build-farm Buildx instance"
+	@echo "  inspect-buildx-instance Inspect the configuration and status of the kube-build-farm instance"
+	@echo "  clean-buildx-instance   Remove the kube-build-farm Buildx instance for cleanup"
+	@echo ""
+	@echo "Variables:"
+	@echo "  KUBE_VERSION            Kubernetes version to use (default: v1.28.0)"
+	@echo "  COMPOSE_DOCKER_CLI_BUILD Enable Docker CLI build (set to 1)"
+	@echo "  DOCKER_BUILDKIT          Enable BuildKit for Docker builds (set to 1)"
+	@echo ""
 
 # Target to build with a timer and metadata logging
 build-with-timer:
