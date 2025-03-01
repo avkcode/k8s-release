@@ -4,6 +4,9 @@
 # Ensure the output directory exists
 all: $(shell mkdir -p output)
 
+# Use kubernetes builder via buildx
+KUBE_BUILDER ?= 0
+
 # Help target: Displays available targets and variables
 help: ## Display this help message
 	@echo "Usage: make <target>"
@@ -16,9 +19,10 @@ help: ## Display this help message
 	@echo "  clean-buildx-instance   Remove the kube-build-farm Buildx instance for cleanup"
 	@echo "  build-with-timer        Build with a timer and log build details (timestamp, duration, Git commit)"
 	@echo "  build                   Perform a simple build using Buildx"
-	@echo "  build-nc                Perform a simple build using Buildx without cache"
+	@echo "  build-no-cache          Perform a simple build using Buildx without cache"
 	@echo ""
 	@echo "Variables:"
+	@echo "  KUBE_BUILDER            Use Kubernetes to build images (default: 1, set to 0 to disable)"
 	@echo "  KUBE_VERSION            Kubernetes version to use (default: v1.28.0)"
 	@echo "  COMPOSE_DOCKER_CLI_BUILD Enable Docker CLI build (set to 1)"
 	@echo "  DOCKER_BUILDKIT          Enable BuildKit for Docker builds (set to 1)"
@@ -32,7 +36,8 @@ build-with-timer:
 	BUILD_TIMESTAMP=$$(date +"%Y-%m-%d %H:%M:%S"); \
 	echo "Build started at: $$BUILD_TIMESTAMP"; \
 	echo "Git commit: $$GIT_COMMIT"; \
-	KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build --builder kube-build-farm; \
+	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build \
+        $(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,) \
 	END_TIME=$$(date +%s); \
 	BUILD_DURATION=$$((END_TIME - START_TIME)); \
 	echo "Build completed at: $$(date +"%Y-%m-%d %H:%M:%S")"; \
@@ -45,12 +50,14 @@ build-with-timer:
 
 build: ## Perform a simple build using Buildx
 	@echo "Starting simple build process..."
-	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build --builder kube-build-farm
+	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build \
+	$(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,)
 	@echo "Build completed."
 
 build-no-cache: ## Perform a build without using the cache
 	@echo "Starting build process without cache..."
-	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build --builder kube-build-farm --no-cache
+	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build \
+        $(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,) --no-cache \ 
 	@echo "Build completed without cache."
 
 # Default target to create the kube-build-farm instance

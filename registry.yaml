@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-registry
+  namespace: buildx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docker-registry
+  template:
+    metadata:
+      labels:
+        app: docker-registry
+    spec:
+      containers:
+      - name: registry
+        image: registry:2
+        ports:
+        - containerPort: 5000
+        env:
+        - name: REGISTRY_STORAGE_DELETE_ENABLED
+          value: "true" # Enable deletion of images if needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-registry
+  namespace: buildx
+spec:
+  type: ClusterIP
+  selector:
+    app: docker-registry
+  ports:
+  - port: 5000
+    targetPort: 5000
