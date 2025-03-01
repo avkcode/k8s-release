@@ -15,7 +15,8 @@ help: ## Display this help message
 	@echo "  inspect-buildx-instance Inspect the configuration and status of the kube-build-farm instance"
 	@echo "  clean-buildx-instance   Remove the kube-build-farm Buildx instance for cleanup"
 	@echo "  build-with-timer        Build with a timer and log build details (timestamp, duration, Git commit)"
-	@echo "  build                   Perform a simple build using Buildx (without timer)"
+	@echo "  build                   Perform a simple build using Buildx"
+	@echo "  build-nc                Perform a simple build using Buildx without cache"
 	@echo ""
 	@echo "Variables:"
 	@echo "  KUBE_VERSION            Kubernetes version to use (default: v1.28.0)"
@@ -31,7 +32,7 @@ build-with-timer:
 	BUILD_TIMESTAMP=$$(date +"%Y-%m-%d %H:%M:%S"); \
 	echo "Build started at: $$BUILD_TIMESTAMP"; \
 	echo "Git commit: $$GIT_COMMIT"; \
-	KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build; \
+	KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build --builder kube-build-farm; \
 	END_TIME=$$(date +%s); \
 	BUILD_DURATION=$$((END_TIME - START_TIME)); \
 	echo "Build completed at: $$(date +"%Y-%m-%d %H:%M:%S")"; \
@@ -42,12 +43,15 @@ build-with-timer:
 	echo "  Duration: $$BUILD_DURATION seconds" >> output/build_info.txt; \
 	echo "Build info saved to output/build_info.txt"
 
-# Perform a simple build using Buildx (without timer)
-build: ## Perform a simple build using Buildx (without timer)
+build: ## Perform a simple build using Buildx
 	@echo "Starting simple build process..."
-	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build
+	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build --builder kube-build-farm
 	@echo "Build completed."
 
+build-no-cache: ## Perform a build without using the cache
+	@echo "Starting build process without cache..."
+	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build --builder kube-build-farm --no-cache
+	@echo "Build completed without cache."
 
 # Default target to create the kube-build-farm instance
 create-buildx-instance:
