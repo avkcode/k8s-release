@@ -4,6 +4,8 @@ Docker Buildx is a powerful extension of Docker's build capabilities, enabling a
 
 A Docker Registry is a storage and distribution system for Docker images. It allows you to store, manage, and share container images within your environment. When using Docker Buildx for distributed builds, a Docker Registry is often used as a central repository to store intermediate and final build artifacts. This is especially important in Kubernetes-based distributed builds, where multiple nodes in the cluster need access to the same images.
 
+[Buildx Kubernetes driver](https://www.google.com/search?q=buildx+kubernetes+driver&client=safari&sca_esv=b343f6cbf10c00dd&sxsrf=AHTn8zobC_q2Wt2FkjhZPzSOQvxCf6Qeew%3A1741023867737&source=hp&ei=e-rFZ7aWKqnq1e8PnK-8sAg&iflsig=ACkRmUkAAAAAZ8X4iw-tadQlpTWU7P0HkOkuJHpZQUV8&ved=0ahUKEwj2v7epu-6LAxUpdfUHHZwXD4YQ4dUDCBg&uact=5&oq=buildx+kubernetes+driver&gs_lp=Egdnd3Mtd2l6IhhidWlsZHgga3ViZXJuZXRlcyBkcml2ZXIyBRAAGIAEMgYQABgWGB4yCxAAGIAEGIYDGIoFMgsQABiABBiGAxiKBTILEAAYgAQYhgMYigVIlihQAFjVJ3ABeACQAQCYAc4DoAHeLKoBBjMtMTAuNbgBA8gBAPgBAZgCDqACuCfCAgoQIxiABBgnGIoFwgIEECMYJ8ICCxAAGIAEGJECGIoFwgIKEAAYgAQYQxiKBcICCxAuGIAEGNEDGMcBwgIIEAAYFhgKGB7CAgUQIRigAZgDAJIHBzEuMy04LjWgB-9U&sclient=gws-wiz)
+
 ### Prerequisites
 
 Kubernetes Cluster:
