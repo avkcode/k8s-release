@@ -1,0 +1,42 @@
+FROM golang:1.20 AS builder
+
+# Define ARG for Kubernetes version
+ARG KUBE_VERSION
+
+# Set the environment variable using the ARG
+ENV KUBE_VERSION=${KUBE_VERSION}
+
+ENV GO111MODULE=on
+ENV GOPATH=/go
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+RUN apt-get update && apt-get install -y \
+    make \
+    gcc \
+    git \
+    bash \
+    rsync \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/kubernetes/kubernetes.git /kubernetes && \
+    cd /kubernetes && \
+    git checkout ${KUBE_VERSION}
+
+WORKDIR /kubernetes
+RUN make WHAT=cmd/kubectl
+
+RUN ls -l /kubernetes/_output/bin/
+
+FROM debian:bullseye-slim
+
+RUN apt-get update && apt-get install -y \
+    iptables \
+    iproute2 \
+    conntrack \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /kubernetes/_output/bin/kubectl /usr/local/bin/kubectl
+
+ENTRYPOINT ["kubectl"]
+
+CMD ["--help"]

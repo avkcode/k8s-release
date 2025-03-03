@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.kube-proxy
       args:
-        - KUBE_VERSION=${KUBE_VERSION} # Pass the KUBE_VERSION argument
+        - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy && chmod +x /output/kube-proxy"]
     volumes:
       - ./output:/output
@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: Dockerfile.kubelet
       args:
-        - KUBE_VERSION=${KUBE_VERSION} # Pass the KUBE_VERSION argument
+        - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet && chmod +x /output/kubelet"]
     volumes:
       - ./output:/output
@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile.etcd
       args:
-        - KUBE_VERSION=${KUBE_VERSION} # Pass the KUBE_VERSION argument
+        - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl && chmod +x /output/etcd /output/etcdctl"]
     volumes:
       - ./output:/output
@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: Dockerfile.kube-scheduler
       args:
-        - KUBE_VERSION=${KUBE_VERSION} # Pass the KUBE_VERSION argument
+        - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler && chmod +x /output/kube-scheduler"]
     volumes:
       - ./output:/output
@@ -44,7 +44,7 @@ services:
       context: .
       dockerfile: Dockerfile.kube-controller-manager
       args:
-        - KUBE_VERSION=${KUBE_VERSION} # Pass the KUBE_VERSION argument
+        - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager && chmod +x /output/kube-controller-manager"]
     volumes:
       - ./output:/output
@@ -54,7 +54,17 @@ services:
       context: .
       dockerfile: Dockerfile.kube-apiserver
       args:
-        - KUBE_VERSION=${KUBE_VERSION} # Pass the KUBE_VERSION argument
+        - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver && chmod +x /output/kube-apiserver"]
+    volumes:
+      - ./output:/output
+
+  kubectl-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.kubectl
+      args:
+        - KUBE_VERSION=${KUBE_VERSION}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl && chmod +x /output/kubectl"]
     volumes:
       - ./output:/output
