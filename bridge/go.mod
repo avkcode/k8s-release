@@ -1,4 +1,4 @@
-module nats-bridge
+module nats-k8s-bridge
 
 go 1.24.0
 
