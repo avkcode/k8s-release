@@ -9,7 +9,7 @@ all: $(shell mkdir -p output)
 KUBE_BUILDER ?= 0
 
 # Define the Kubernetes version to use
-KUBE_VERSION ?= v1.28.0
+KUBE_VERSION ?= v1.32.2
 
 # Help target: Displays available targets and variables
 help: ## Display this help message
@@ -47,7 +47,7 @@ endef
 build: ## Perform a simple build using Buildx
 	@echo "Starting simple build process..."
 	@$(eval START_TIME := $(shell date +%s))
-	@KUBE_VERSION=$(KUBE_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build \
+	@KUBE_VERSION=$(KUBE_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build \
 		$(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,)
 	@$(BUILD_INFO)
 
@@ -55,6 +55,6 @@ build: ## Perform a simple build using Buildx
 build-no-cache: ## Perform a build without using the cache
 	@echo "Starting build process without cache..."
 	@$(eval START_TIME := $(shell date +%s))
-	@KUBE_VERSION=$(KUBE_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build \
+	@KUBE_VERSION=$(KUBE_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build \
  		$(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,) --no-cache
 	@$(BUILD_INFO)
