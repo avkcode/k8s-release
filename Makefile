@@ -1,10 +1,11 @@
-# Default target: Display help message
 .DEFAULT_GOAL := help
 
 # Ensure the output directory exists
 all: $(shell mkdir -p output)
 
-# Use kubernetes builder via buildx
+# Use Kubernetes as the builder backend via Buildx
+# Set to 1 to enable Kubernetes-based distributed builds using Buildx.
+# Set to 0 to disable Kubernetes and use the default Docker builder.
 KUBE_BUILDER ?= 0
 
 # Help target: Displays available targets and variables
@@ -13,11 +14,6 @@ help: ## Display this help message
 	@echo ""
 	@echo "Targets:"
 	@echo "  help                    Display this help message"
-	@echo "  create-buildx-instance  Create the initial kube-build-farm Buildx instance"
-	@echo "  append-buildx-node      Append additional nodes to the kube-build-farm Buildx instance"
-	@echo "  inspect-buildx-instance Inspect the configuration and status of the kube-build-farm instance"
-	@echo "  clean-buildx-instance   Remove the kube-build-farm Buildx instance for cleanup"
-	@echo "  build-with-timer        Build with a timer and log build details (timestamp, duration, Git commit)"
 	@echo "  build                   Perform a simple build using Buildx"
 	@echo "  build-no-cache          Perform a simple build using Buildx without cache"
 	@echo ""
@@ -28,77 +24,34 @@ help: ## Display this help message
 	@echo "  DOCKER_BUILDKIT          Enable BuildKit for Docker builds (set to 1)"
 	@echo ""
 
-# Target to build with a timer and metadata logging
-build-with-timer:
-	@echo "Starting build process..."
-	@START_TIME=$$(date +%s); \
-	GIT_COMMIT=$$(git rev-parse HEAD 2>/dev/null || echo "unknown"); \
-	BUILD_TIMESTAMP=$$(date +"%Y-%m-%d %H:%M:%S"); \
-	echo "Build started at: $$BUILD_TIMESTAMP"; \
-	echo "Git commit: $$GIT_COMMIT"; \
-	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build \
-        $(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,) \
-	END_TIME=$$(date +%s); \
-	BUILD_DURATION=$$((END_TIME - START_TIME)); \
-	echo "Build completed at: $$(date +"%Y-%m-%d %H:%M:%S")"; \
-	echo "Total build time: $$BUILD_DURATION seconds"; \
-	echo "Build details:" > output/build_info.txt; \
-	echo "  Timestamp: $$BUILD_TIMESTAMP" >> output/build_info.txt; \
-	echo "  Git Commit: $$GIT_COMMIT" >> output/build_info.txt; \
-	echo "  Duration: $$BUILD_DURATION seconds" >> output/build_info.txt; \
-	echo "Build info saved to output/build_info.txt"
+# Target to check if required tools are installed and functional
+check-tools: ## Check if docker, docker-compose, and buildx are installed and functional
+	@echo "Checking if required tools are installed..."
+	@command -v docker >/dev/null 2>&1 || { echo >&2 "Error: Docker is not installed or not in PATH."; exit 1; }
+	@docker --version >/dev/null 2>&1 || { echo >&2 "Error: Docker is not functioning correctly."; exit 1; }
+	@command -v docker-compose >/dev/null 2>&1 || { echo >&2 "Error: Docker Compose is not installed or not in PATH."; exit 1; }
+	@docker-compose --version >/dev/null 2>&1 || { echo >&2 "Error: Docker Compose is not functioning correctly."; exit 1; }
+	@docker buildx version >/dev/null 2>&1 || { echo >&2 "Error: Docker Buildx is not installed or not functioning correctly."; exit 1; }
+	@echo "All required tools are installed and functional."
 
+# Define BUILD_INFO to calculate and display build duration
+define BUILD_INFO
+    @echo "Build completed at: $$(date '+%Y-%m-%d %H:%M:%S')"
+    @echo "Total build time: $$(($$(date +%s) - $(START_TIME))) seconds"
+endef
+
+# Perform a simple build using Buildx
 build: ## Perform a simple build using Buildx
 	@echo "Starting simple build process..."
+	@$(eval START_TIME := $(shell date +%s))
 	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build \
-	$(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,)
-	@echo "Build completed."
+		$(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,)
+	@$(BUILD_INFO)
 
+# Perform a build without using the cache
 build-no-cache: ## Perform a build without using the cache
 	@echo "Starting build process without cache..."
+	@$(eval START_TIME := $(shell date +%s))
 	@KUBE_VERSION=v1.28.0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build \
-        $(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,) --no-cache \ 
-	@echo "Build completed without cache."
-
-# Default target to create the kube-build-farm instance
-create-buildx-instance:
-	@echo "Creating Buildx instance 'kube-build-farm'..."
-	@docker buildx create \
-		--platform amd64 \
-		--name kube-build-farm \
-		--driver kubernetes \
-		--driver-opt loadbalance=random \
-		--driver-opt replicas=2 \
-		--driver-opt namespace=buildx \
-		--driver-opt limits.cpu=1 \
-		--config ./config.toml \
-		--bootstrap
-	@echo "Buildx instance 'kube-build-farm' created successfully."
-
-# Target to append additional nodes to the kube-build-farm instance
-append-buildx-node:
-	@echo "Appending additional node to Buildx instance 'kube-build-farm'..."
-	@docker buildx create \
-		--platform amd64 \
-		--append \
-		--name kube-build-farm \
-		--driver kubernetes \
-		--driver-opt loadbalance=random \
-		--driver-opt replicas=2 \
-		--driver-opt namespace=buildx \
-		--driver-opt limits.cpu=1 \
-		--config ./config.toml \
-		--bootstrap
-	@echo "Additional node appended to Buildx instance 'kube-build-farm'."
-
-# Target to inspect the kube-build-farm instance
-inspect-buildx-instance:
-	@echo "Inspecting Buildx instance 'kube-build-farm'..."
-	@docker buildx inspect kube-build-farm
-	@echo "Inspection completed."
-
-# Clean up the Buildx instance (optional)
-clean-buildx-instance:
-	@echo "Removing Buildx instance 'kube-build-farm'..."
-	@docker buildx rm kube-build-farm || true
-	@echo "Buildx instance 'kube-build-farm' removed."
+ 		$(if $(filter 1,$(KUBE_BUILDER)),--builder=kube-build-farm,) --no-cache
+	@$(BUILD_INFO)

@@ -1,5 +1,7 @@
 # Requirements
 
-```
-apt install docker-buildx
-```
+## Tools
+
+- docker
+- docker-buildx
+- docker-compose

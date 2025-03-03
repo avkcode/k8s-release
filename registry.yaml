@@ -20,7 +20,7 @@ spec:
         - containerPort: 5000
         env:
         - name: REGISTRY_STORAGE_DELETE_ENABLED
-          value: "true" # Enable deletion of images if needed
+          value: "true"
 ---
 apiVersion: v1
 kind: Service

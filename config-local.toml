@@ -1,0 +1,2 @@
+cache-to = ["type=local,dest=/tmp/cache,mode=max"]
+cache-from = ["type=local,src=/tmp/cache,mode=max"]
