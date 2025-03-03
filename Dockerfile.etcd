@@ -1,6 +1,11 @@
 FROM golang:1.20 AS builder
 
-ENV ETCD_VERSION=v3.5.9
+# Define ARG for Kubernetes version
+ARG ETCD_VERSION
+
+# Set the environment variable using the ARG
+ENV ETCD_VERISON=${ETCD_VERSION}
+
 ENV GO111MODULE=on
 ENV GOPATH=/go
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin

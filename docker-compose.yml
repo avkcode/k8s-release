@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile.etcd
       args:
-        - KUBE_VERSION=${KUBE_VERSION}
+        - ETCD_VERSION=${ETCD_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl && chmod +x /output/etcd /output/etcdctl"]
     volumes:
       - ./output:/output
