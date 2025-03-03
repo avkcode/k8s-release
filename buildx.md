@@ -19,7 +19,7 @@ docker buildx create \
     --driver-opt replicas=2 \
     --driver-opt namespace=buildx \
     --driver-opt limits.cpu=1 \
-    --config ./config.toml \
+    --config config-remote.toml \
     --bootstrap
 ```
 
@@ -36,7 +36,7 @@ docker buildx create \
     --driver-opt replicas=2 \
     --driver-opt namespace=buildx \
     --driver-opt limits.cpu=1 \
-    --config ./config.toml \
+    --config config-remote.toml \
     --bootstrap
 ```
 
