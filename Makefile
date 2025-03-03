@@ -15,7 +15,7 @@ KUBE_VERSION ?= v1.32.2
 ETCD_VERSION ?= v3.5.9
 
 # Help target: Displays available targets and variables
-help: ## Display this help message
+help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Targets:"
@@ -31,8 +31,8 @@ help: ## Display this help message
 	@echo "  DOCKER_BUILDKIT          Enable BuildKit for Docker builds (set to 1)"
 	@echo ""
 
-# Target to check if required tools are installed and functional
-check-tools: ## Check if docker, docker-compose, and buildx are installed and functional
+# Check if required tools are installed and functional
+check-tools:
 	@echo "Checking if required tools are installed..."
 	@command -v docker >/dev/null 2>&1 || { echo >&2 "Error: Docker is not installed or not in PATH."; exit 1; }
 	@docker --version >/dev/null 2>&1 || { echo >&2 "Error: Docker is not functioning correctly."; exit 1; }
@@ -47,8 +47,8 @@ define BUILD_INFO
     @echo "Total build time: $$(($$(date +%s) - $(START_TIME))) seconds"
 endef
 
-# Perform a simple build using Buildx
-build: ## Perform a simple build using Buildx
+# If KUBE_BUILDER is set to 1 use buildx kubernetes build farm
+build:
 	@echo "Starting simple build process..."
 	@$(eval START_TIME := $(shell date +%s))
 	@KUBE_VERSION=$(KUBE_VERSION) ETCD_VERSION=$(ETCD_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build \
@@ -56,7 +56,7 @@ build: ## Perform a simple build using Buildx
 	@$(BUILD_INFO)
 
 # Perform a build without using the cache
-build-no-cache: ## Perform a build without using the cache
+build-no-cache:
 	@echo "Starting build process without cache..."
 	@$(eval START_TIME := $(shell date +%s))
 	@KUBE_VERSION=$(KUBE_VERSION) ETCD_VERSION=$(ETCD_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build \
