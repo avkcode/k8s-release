@@ -14,6 +14,8 @@ KUBE_VERSION ?= v1.32.2
 # Define the etcd version to use
 ETCD_VERSION ?= v3.5.9
 
+KUBE_GIT_URL ?= https://github.com/kubernetes/kubernetes.git
+
 # Help target: Displays available targets and variables
 help:
 	@echo "Usage: make <target>"
@@ -27,6 +29,7 @@ help:
 	@echo "  clean                   Clean up generated files"
 	@echo ""
 	@echo "Variables:"
+	@echo "  KUBE_GIT_URL            Kubernetes Git repository URL (default: https://github.com/kubernetes/kubernetes.git)"
 	@echo "  KUBE_BUILDER            Use Kubernetes to build images (default: 0, set to 1 to enable)"
 	@echo "  KUBE_VERSION            Kubernetes version to use (default: v1.32.2)"
 	@echo "  ETCD_VERSION            Etcd version to use (default: v3.5.9)"
@@ -64,43 +67,35 @@ endif
 build: check-tools switch-builder
 	@echo "Starting simple build process..."
 	@$(eval START_TIME := $(shell date +%s))
-	@KUBE_VERSION=$(KUBE_VERSION) ETCD_VERSION=$(ETCD_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build
+	@KUBE_VERSION=$(KUBE_VERSION) KUBE_GIT_URL=$(KUBE_GIT_URL) ETCD_VERSION=$(ETCD_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build
 	@$(BUILD_INFO)
 
 # Perform a build without using the cache
 build-no-cache: check-tools switch-builder
 	@echo "Starting build process without cache..."
 	@$(eval START_TIME := $(shell date +%s))
-	@KUBE_VERSION=$(KUBE_VERSION) ETCD_VERSION=$(ETCD_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build --no-cache
+	@KUBE_VERSION=$(KUBE_VERSION) KUBE_GIT_URL=$(KUBE_GIT_URL) ETCD_VERSION=$(ETCD_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build --no-cache
 	@$(BUILD_INFO)
 
 # Variables
 GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
-BUILD_INFO := build-info.txt
 
 # Target: Create git archive
 .PHONY: archive
-archive: $(BUILD_INFO)
+archive:
 	@echo "Creating git archive..."
 	git archive --format=tar.gz --output=archive-$(GIT_BRANCH)-$(GIT_COMMIT).tar.gz HEAD
 	@echo "Archive created: archive-$(GIT_BRANCH)-$(GIT_COMMIT).tar.gz"
 
 # Target: Create git bundle
 .PHONY: bundle
-bundle: $(BUILD_INFO)
+bundle:
 	@echo "Creating git bundle..."
 	git bundle create bundle-$(GIT_BRANCH)-$(GIT_COMMIT).bundle --all
 	@echo "Bundle created: bundle-$(GIT_BRANCH)-$(GIT_COMMIT).bundle"
 
-# Generate build-info.txt
-$(BUILD_INFO):
-	@echo "Generating build-info.txt..."
-	@echo "Branch: $(GIT_BRANCH)" > $(BUILD_INFO)
-	@echo "Commit: $(GIT_COMMIT)" >> $(BUILD_INFO)
-	@echo "Build Date: $(shell date)" >> $(BUILD_INFO)
-
 # Clean up generated files
 .PHONY: clean
 clean:
-	rm -f $(BUILD_INFO) archive-*.tar.gz bundle-*.bundle
+	@rm -f archive-*.tar.gz bundle-*.bundle

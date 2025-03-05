@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.kube-proxy
       args:
+        - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy && chmod +x /output/kube-proxy"]
     volumes:
@@ -14,6 +15,7 @@ services:
       context: .
       dockerfile: Dockerfile.kubelet
       args:
+        - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet && chmod +x /output/kubelet"]
     volumes:
@@ -34,6 +36,7 @@ services:
       context: .
       dockerfile: Dockerfile.kube-scheduler
       args:
+        - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler && chmod +x /output/kube-scheduler"]
     volumes:
@@ -44,6 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile.kube-controller-manager
       args:
+        - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager && chmod +x /output/kube-controller-manager"]
     volumes:
@@ -54,6 +58,7 @@ services:
       context: .
       dockerfile: Dockerfile.kube-apiserver
       args:
+        - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver && chmod +x /output/kube-apiserver"]
     volumes:
@@ -64,6 +69,7 @@ services:
       context: .
       dockerfile: Dockerfile.kubectl
       args:
+        - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl && chmod +x /output/kubectl"]
     volumes:

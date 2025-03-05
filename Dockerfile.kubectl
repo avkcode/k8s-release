@@ -1,10 +1,12 @@
 FROM golang:1.20 AS builder
 
-# Define ARG for Kubernetes version
+# Define ARG for Kubernetes version and Git URL
 ARG KUBE_VERSION
+ARG KUBE_GIT_URL
 
-# Set the environment variable using the ARG
+# Set the environment variables using the ARGs
 ENV KUBE_VERSION=${KUBE_VERSION}
+ENV KUBE_GIT_URL=${KUBE_GIT_URL}
 
 ENV GO111MODULE=on
 ENV GOPATH=/go
@@ -18,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     rsync \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/kubernetes/kubernetes.git /kubernetes && \
+RUN git clone ${KUBE_GIT_URL} /kubernetes && \
     cd /kubernetes && \
     git checkout ${KUBE_VERSION}
 
