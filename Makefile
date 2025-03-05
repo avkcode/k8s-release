@@ -16,6 +16,10 @@ ETCD_VERSION ?= v3.5.9
 
 KUBE_GIT_URL ?= https://github.com/kubernetes/kubernetes.git
 
+# Define the Flannel version to use
+FLANNEL_VERSION ?= v0.26.4
+FLANNEL_GIT_URL ?= https://github.com/flannel-io/flannel.git
+
 # Help target: Displays available targets and variables
 help:
 	@echo "Usage: make <target>"
@@ -29,6 +33,8 @@ help:
 	@echo "  clean                   Clean up generated files"
 	@echo ""
 	@echo "Variables:"
+	@echo "  FLANNEL_GIT_URL         Flannel Git repository URL (default: https://github.com/flannel-io/flannel.git)"
+	@echo "  FLANNEL_VERSION         Flannel version to use (default: v0.26.4)"
 	@echo "  KUBE_GIT_URL            Kubernetes Git repository URL (default: https://github.com/kubernetes/kubernetes.git)"
 	@echo "  KUBE_BUILDER            Use Kubernetes to build images (default: 0, set to 1 to enable)"
 	@echo "  KUBE_VERSION            Kubernetes version to use (default: v1.32.2)"
@@ -63,18 +69,29 @@ else
 	@docker buildx use default
 endif
 
+# Multi-line variable for docker-compose arguments
+define DOCKER_ARGS
+    KUBE_VERSION=$(KUBE_VERSION) \
+    KUBE_GIT_URL=$(KUBE_GIT_URL) \
+    ETCD_VERSION=$(ETCD_VERSION) \
+    COMPOSE_DOCKER_CLI_BUILD=1 \
+    DOCKER_BUILDKIT=1 \
+    FLANNEL_GIT_URL=$(FLANNEL_GIT_URL) \
+    FLANNEL_VERSION=$(FLANNEL_VERSION)
+endef
+
 # If KUBE_BUILDER is set to 1, use buildx Kubernetes build farm
 build: check-tools switch-builder
 	@echo "Starting simple build process..."
 	@$(eval START_TIME := $(shell date +%s))
-	@KUBE_VERSION=$(KUBE_VERSION) KUBE_GIT_URL=$(KUBE_GIT_URL) ETCD_VERSION=$(ETCD_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build
+	$(DOCKER_ARGS) docker-compose up --build
 	@$(BUILD_INFO)
 
 # Perform a build without using the cache
 build-no-cache: check-tools switch-builder
 	@echo "Starting build process without cache..."
 	@$(eval START_TIME := $(shell date +%s))
-	@KUBE_VERSION=$(KUBE_VERSION) KUBE_GIT_URL=$(KUBE_GIT_URL) ETCD_VERSION=$(ETCD_VERSION) COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build --no-cache
+	$(DOCKER_ARGS) docker-compose up --build --no-cache
 	@$(BUILD_INFO)
 
 # Variables

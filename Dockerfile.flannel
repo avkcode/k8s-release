@@ -1,0 +1,53 @@
+# Stage 1: Builder stage
+FROM golang:1.23 AS builder
+
+# Define ARGs
+ARG FLANNEL_VERSION
+ARG FLANNEL_GIT_URL
+
+# Set environment variables
+ENV FLANNEL_VERSION=${FLANNEL_VERSION}
+ENV FLANNEL_GIT_URL=${FLANNEL_GIT_URL}
+
+ENV GO111MODULE=on
+ENV GOPATH=/go
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
+    make \
+    gcc \
+    git \
+    bash \
+    rsync \
+    libpcap-dev \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone and build Flannel
+RUN git clone ${FLANNEL_GIT_URL} /flannel && \
+    cd /flannel && \
+    git checkout ${FLANNEL_VERSION} && \
+    make dist/flanneld
+
+# List the built binary for verification
+RUN ls -l /flannel/dist/
+
+# Stage 2: Runtime stage
+FROM debian:bullseye-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    iptables \
+    iproute2 \
+    conntrack \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the built binary from the builder stage
+COPY --from=builder /flannel/dist/flanneld /usr/local/bin/flanneld
+
+# Set the entrypoint for the container
+ENTRYPOINT ["flanneld"]
+
+# Default command (can be overridden at runtime)
+CMD ["--help"]

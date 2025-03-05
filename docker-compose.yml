@@ -74,3 +74,14 @@ services:
     entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl && chmod +x /output/kubectl"]
     volumes:
       - ./output:/output
+
+  flannel-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.flannel
+      args:
+        - FLANNEL_VERSION=v0.26.4
+        - FLANNEL_GIT_URL=https://github.com/flannel-io/flannel.git
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/flanneld /output/flanneld && chmod +x /output/flanneld"]
+    volumes:
+      - ./output:/output
