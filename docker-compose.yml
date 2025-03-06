@@ -6,7 +6,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy && chmod +x /output/kube-proxy"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy"]
     volumes:
       - ./output:/output
 
@@ -17,7 +17,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet && chmod +x /output/kubelet"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet"]
     volumes:
       - ./output:/output
 
@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile.etcd
       args:
         - ETCD_VERSION=${ETCD_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl && chmod +x /output/etcd /output/etcdctl"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl"]
     volumes:
       - ./output:/output
 
@@ -38,7 +38,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler && chmod +x /output/kube-scheduler"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler"]
     volumes:
       - ./output:/output
 
@@ -49,7 +49,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager && chmod +x /output/kube-controller-manager"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager"]
     volumes:
       - ./output:/output
 
@@ -60,7 +60,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver && chmod +x /output/kube-apiserver"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver"]
     volumes:
       - ./output:/output
 
@@ -71,7 +71,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl && chmod +x /output/kubectl"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl"]
     volumes:
       - ./output:/output
 
@@ -82,6 +82,6 @@ services:
       args:
         - FLANNEL_VERSION=v0.26.4
         - FLANNEL_GIT_URL=https://github.com/flannel-io/flannel.git
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/flanneld /output/flanneld && chmod +x /output/flanneld"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/flanneld /output/flanneld"]
     volumes:
       - ./output:/output

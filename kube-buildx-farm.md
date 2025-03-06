@@ -6,28 +6,21 @@ A Docker Registry is a storage and distribution system for Docker images. It all
 
 [Buildx Kubernetes driver](https://docs.docker.com/build/builders/drivers/kubernetes)
 
-### Prerequisites
+## Prerequisites
 
 Kubernetes Cluster:
 Ensure you have a running Kubernetes cluster (e.g., Minikube, Kind, or a production-grade cluster like GKE, EKS, or AKS).
-kubectl:
+
 Install and configure kubectl, the Kubernetes command-line tool. Verify it works by running:
 ```
 kubectl version --client
 ```
-Namespace:
 Ensure the buildx namespace exists. If it doesn't, create it:
 ```
 kubectl create namespace buildx
 ```
 
 ## Create Namespace
-
-Ensure the `buildx` namespace exists in your Kubernetes cluster. The Buildx commands rely on this namespace to deploy resources. Run the following command to create the namespace if it does not already exist.
-
-```
-kubectl create ns buildx
-```
 
 ```yaml
 apiVersion: apps/v1
@@ -125,7 +118,7 @@ Append an additional node to the existing `kube-build-farm` Buildx instance. Thi
 docker buildx create \
     --platform amd64 \
     --append \
-    --name kube-build-farm \
+    --name <INSTANCE NAME> \
     --driver kubernetes \
     --driver-opt loadbalance=random \
     --driver-opt replicas=2 \
@@ -134,6 +127,19 @@ docker buildx create \
     --config config-remote.toml \
     --bootstrap
 ```
+## Multi-architecture builds 
+
+Performing multi-architecture builds (e.g., AMD64 and ARM64) using a single physical builder instance.
+
+```bash
+docker buildx create \
+  --bootstrap \
+  --name=<INSTANCE NAME> \
+  --driver=kubernetes \
+  --driver-opt=namespace=buildx,qemu.install=true
+```
+
+The qemu.install=true option is required for cross-architecture builds.
 
 ## Inspect Buildx Instance
 

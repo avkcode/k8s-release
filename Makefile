@@ -37,6 +37,7 @@ help:
 	@echo "  FLANNEL_VERSION         Flannel version to use (default: v0.26.4)"
 	@echo "  KUBE_GIT_URL            Kubernetes Git repository URL (default: https://github.com/kubernetes/kubernetes.git)"
 	@echo "  KUBE_BUILDER            Use Kubernetes to build images (default: 0, set to 1 to enable)"
+	@echo "  KUBE_BUILDER_ARM64      Use Kubernetes ARM64 builder (default: 0, set to 1 to enable)"
 	@echo "  KUBE_VERSION            Kubernetes version to use (default: v1.32.2)"
 	@echo "  ETCD_VERSION            Etcd version to use (default: v3.5.9)"
 	@echo "  COMPOSE_DOCKER_CLI_BUILD Enable Docker CLI build (set to 1)"
@@ -59,14 +60,24 @@ define BUILD_INFO
     @echo "Total build time: $$(($$(date +%s) - $(START_TIME))) seconds"
 endef
 
-# Switch to the appropriate Buildx builder based on KUBE_BUILDER
+# Switch to the appropriate Buildx builder based on KUBE_BUILDER or KUBE_BUILDER_ARM64
 switch-builder:
-ifeq ($(KUBE_BUILDER),1)
+ifeq ($(KUBE_BUILDER_ARM64),1)
+	@echo "Switching to Kubernetes ARM64 Buildx builder..."
+	@docker buildx use kube-build-farm-arm64 || { echo >&2 "Error: Kubernetes ARM64 Buildx builder not found."; exit 1; }
+else ifeq ($(KUBE_BUILDER),1)
 	@echo "Switching to Kubernetes Buildx builder..."
 	@docker buildx use kube-build-farm || { echo >&2 "Error: Kubernetes Buildx builder not found."; exit 1; }
 else
 	@echo "Switching to default Buildx builder..."
 	@docker buildx use default
+endif
+
+# Define the default platform based on $KUBE_BUILDER
+ifeq ($(KUBE_BUILDER_ARM64),1)
+    DOCKER_DEFAULT_PLATFORM := linux/arm64
+else
+    DOCKER_DEFAULT_PLATFORM := linux/amd64
 endif
 
 # Multi-line variable for docker-compose arguments
@@ -77,7 +88,8 @@ define DOCKER_ARGS
     COMPOSE_DOCKER_CLI_BUILD=1 \
     DOCKER_BUILDKIT=1 \
     FLANNEL_GIT_URL=$(FLANNEL_GIT_URL) \
-    FLANNEL_VERSION=$(FLANNEL_VERSION)
+    FLANNEL_VERSION=$(FLANNEL_VERSION) \
+    DOCKER_DEFAULT_PLATFORM=$(DOCKER_DEFAULT_PLATFORM) 
 endef
 
 # If KUBE_BUILDER is set to 1, use buildx Kubernetes build farm
