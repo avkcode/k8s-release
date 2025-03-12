@@ -31,6 +31,7 @@ help:
 	@echo "  archive                 Create a git archive with branch and commit in the name"
 	@echo "  bundle                  Create a git bundle with branch and commit in the name"
 	@echo "  clean                   Clean up generated files"
+	@echo "  release                 Create a Git tag and release on GitHub"
 	@echo ""
 	@echo "Variables:"
 	@echo "  FLANNEL_GIT_URL         Flannel Git repository URL (default: https://github.com/flannel-io/flannel.git)"
@@ -128,3 +129,13 @@ bundle:
 .PHONY: clean
 clean:
 	@rm -f archive-*.tar.gz bundle-*.bundle
+
+# Target: Create a Git tag and release on GitHub
+.PHONY: release
+release:
+	@echo "Creating Git tag and releasing on GitHub..."
+	@read -p "Enter the version number (e.g., v1.0.0): " version; \
+	git tag -a $$version -m "Release $$version"; \
+	git push origin $$version; \
+	gh release create $$version --generate-notes
+	@echo "Release $$version created and pushed to GitHub."
