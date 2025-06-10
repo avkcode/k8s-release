@@ -20,14 +20,27 @@ KUBE_GIT_URL ?= https://github.com/kubernetes/kubernetes.git
 FLANNEL_VERSION ?= v0.26.4
 FLANNEL_GIT_URL ?= https://github.com/flannel-io/flannel.git
 
+# Define the Calico version to use
+CALICO_VERSION ?= v3.28.0
+CALICO_GIT_URL ?= https://github.com/projectcalico/calico.git
+
 # Help target: Displays available targets and variables
 help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Targets:"
 	@echo "  help                    Display this help message"
-	@echo "  build                   Perform a simple build using Buildx"
+	@echo "  build                   Perform a simple build using Buildx (all components)"
 	@echo "  build-no-cache          Perform a simple build using Buildx without cache"
+	@echo "  build-kube-proxy        Build only kube-proxy"
+	@echo "  build-kubelet           Build only kubelet"
+	@echo "  build-etcd              Build only etcd"
+	@echo "  build-kube-scheduler    Build only kube-scheduler"
+	@echo "  build-kube-controller-manager Build only kube-controller-manager"
+	@echo "  build-kube-apiserver    Build only kube-apiserver"
+	@echo "  build-kubectl           Build only kubectl"
+	@echo "  build-flannel           Build only flannel"
+	@echo "  build-calico            Build only calico"
 	@echo "  archive                 Create a git archive with branch and commit in the name"
 	@echo "  bundle                  Create a git bundle with branch and commit in the name"
 	@echo "  clean                   Clean up generated files"
@@ -36,6 +49,8 @@ help:
 	@echo "Variables:"
 	@echo "  FLANNEL_GIT_URL         Flannel Git repository URL (default: https://github.com/flannel-io/flannel.git)"
 	@echo "  FLANNEL_VERSION         Flannel version to use (default: v0.26.4)"
+	@echo "  CALICO_GIT_URL          Calico Git repository URL (default: https://github.com/projectcalico/calico.git)"
+	@echo "  CALICO_VERSION          Calico version to use (default: v3.28.0)"
 	@echo "  KUBE_GIT_URL            Kubernetes Git repository URL (default: https://github.com/kubernetes/kubernetes.git)"
 	@echo "  KUBE_BUILDER            Use Kubernetes to build images (default: 0, set to 1 to enable)"
 	@echo "  KUBE_BUILDER_ARM64      Use Kubernetes ARM64 builder (default: 0, set to 1 to enable)"
@@ -90,6 +105,8 @@ define DOCKER_ARGS
     DOCKER_BUILDKIT=1 \
     FLANNEL_GIT_URL=$(FLANNEL_GIT_URL) \
     FLANNEL_VERSION=$(FLANNEL_VERSION) \
+    CALICO_GIT_URL=$(CALICO_GIT_URL) \
+    CALICO_VERSION=$(CALICO_VERSION) \
     DOCKER_DEFAULT_PLATFORM=$(DOCKER_DEFAULT_PLATFORM) 
 endef
 
@@ -129,6 +146,70 @@ bundle:
 .PHONY: clean
 clean:
 	@rm -f archive-*.tar.gz bundle-*.bundle
+
+# Individual component build targets
+.PHONY: build-kube-proxy
+build-kube-proxy: check-tools switch-builder
+	@echo "Building kube-proxy..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build kube-proxy-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-kubelet
+build-kubelet: check-tools switch-builder
+	@echo "Building kubelet..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build kubelet-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-etcd
+build-etcd: check-tools switch-builder
+	@echo "Building etcd..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build etcd-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-kube-scheduler
+build-kube-scheduler: check-tools switch-builder
+	@echo "Building kube-scheduler..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build kube-scheduler-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-kube-controller-manager
+build-kube-controller-manager: check-tools switch-builder
+	@echo "Building kube-controller-manager..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build kube-controller-manager-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-kube-apiserver
+build-kube-apiserver: check-tools switch-builder
+	@echo "Building kube-apiserver..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build kube-apiserver-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-kubectl
+build-kubectl: check-tools switch-builder
+	@echo "Building kubectl..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build kubectl-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-flannel
+build-flannel: check-tools switch-builder
+	@echo "Building flannel..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build flannel-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-calico
+build-calico: check-tools switch-builder
+	@echo "Building calico..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) docker-compose up --build calico-builder
+	@$(BUILD_INFO)
 
 # Target: Create a Git tag and release on GitHub
 .PHONY: release

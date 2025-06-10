@@ -1,0 +1,16 @@
+[Unit]
+Description=Flannel Network Fabric
+Documentation=https://github.com/flannel-io/flannel
+After=network.target
+Before=docker.service
+
+[Service]
+ExecStart=/usr/local/bin/flanneld \
+  --ip-masq \
+  --kube-subnet-mgr \
+  --iface=${FLANNEL_IFACE}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

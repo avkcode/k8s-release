@@ -1,0 +1,104 @@
+FROM golang:1.23 AS builder
+
+# Define ARGs
+ARG CALICO_VERSION
+ARG CALICO_GIT_URL
+
+# Set environment variables
+ENV CALICO_VERSION=${CALICO_VERSION}
+ENV CALICO_GIT_URL=${CALICO_GIT_URL}
+
+ENV GO111MODULE=on
+ENV GOPATH=/go
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
+    make \
+    gcc \
+    git \
+    bash \
+    rsync \
+    libpcap-dev \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone and build Calico
+RUN git clone ${CALICO_GIT_URL} /calico && \
+    cd /calico && \
+    git checkout ${CALICO_VERSION}
+
+# Build Calico binaries
+WORKDIR /calico
+RUN cd /calico/node && \
+    make build && \
+    cd /calico/felix && \
+    make build && \
+    cd /calico/cni-plugin && \
+    make build && \
+    cd /calico/kube-controllers && \
+    make build
+
+# List the built binaries for verification
+RUN ls -la /calico/bin/
+
+# Stage 2: Runtime stage
+FROM debian:bullseye-slim
+
+# Define ARG again for the second stage
+ARG CALICO_VERSION
+
+# Set the environment variable in the second stage
+ENV CALICO_VERSION=${CALICO_VERSION}
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    iptables \
+    iproute2 \
+    ipset \
+    iputils-ping \
+    conntrack \
+    dpkg \
+    dpkg-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the built binaries from the builder stage
+COPY --from=builder /calico/bin/calico-node /usr/local/bin/calico-node
+COPY --from=builder /calico/bin/calico-felix /usr/local/bin/calico-felix
+COPY --from=builder /calico/bin/calico /usr/local/bin/calico
+COPY --from=builder /calico/bin/calico-ipam /usr/local/bin/calico-ipam
+COPY --from=builder /calico/bin/calico-kube-controllers /usr/local/bin/calico-kube-controllers
+COPY package-builder.sh /usr/local/bin/package-builder.sh
+
+# Create directories for systemd units
+RUN mkdir -p /systemd-units /config-files
+
+# Copy systemd unit files
+COPY systemd-units/calico-node.service /systemd-units/
+
+RUN chmod +x /usr/local/bin/package-builder.sh
+
+# Create output directory first with proper permissions
+RUN mkdir -p /output && chmod 777 /output
+
+# Create Debian packages
+RUN /usr/local/bin/package-builder.sh calico-node "${CALICO_VERSION}" "Calico Node Agent" && \
+    /usr/local/bin/package-builder.sh calico-felix "${CALICO_VERSION}" "Calico Felix Agent" && \
+    /usr/local/bin/package-builder.sh calico "${CALICO_VERSION}" "Calico CNI Plugin" && \
+    /usr/local/bin/package-builder.sh calico-ipam "${CALICO_VERSION}" "Calico IPAM Plugin" && \
+    /usr/local/bin/package-builder.sh calico-kube-controllers "${CALICO_VERSION}" "Calico Kubernetes Controllers" && \
+    ls -la /output
+
+# Make sure the output directory has the right permissions
+RUN chmod -R 777 /output
+
+VOLUME ["/output"]
+
+# Copy the packages to a more accessible location
+RUN cp /output/*.deb / || true
+
+# Set the entrypoint for the container
+ENTRYPOINT ["calico-node"]
+
+# Default command (can be overridden at runtime)
+CMD ["--help"]

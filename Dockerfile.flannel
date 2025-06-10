@@ -36,15 +36,47 @@ RUN ls -l /flannel/dist/
 # Stage 2: Runtime stage
 FROM debian:bullseye-slim
 
+# Define ARG again for the second stage
+ARG FLANNEL_VERSION
+
+# Set the environment variable in the second stage
+ENV FLANNEL_VERSION=${FLANNEL_VERSION}
+
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     iptables \
     iproute2 \
     conntrack \
+    dpkg \
+    dpkg-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the built binary from the builder stage
 COPY --from=builder /flannel/dist/flanneld /usr/local/bin/flanneld
+COPY package-builder.sh /usr/local/bin/package-builder.sh
+
+# Create directories for systemd units
+RUN mkdir -p /systemd-units /config-files
+
+# Copy systemd unit files
+COPY systemd-units/flanneld.service /systemd-units/
+
+RUN chmod +x /usr/local/bin/package-builder.sh
+
+# Create output directory first with proper permissions
+RUN mkdir -p /output && chmod 777 /output
+
+# Create Debian package
+RUN /usr/local/bin/package-builder.sh flanneld "${FLANNEL_VERSION}" "Flannel Network Fabric for Containers" && \
+    ls -la /output
+
+# Make sure the output directory has the right permissions
+RUN chmod -R 777 /output
+
+VOLUME ["/output"]
+
+# Copy the packages to a more accessible location
+RUN cp /output/*.deb / || true
 
 # Set the entrypoint for the container
 ENTRYPOINT ["flanneld"]
