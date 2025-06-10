@@ -120,5 +120,6 @@ echo "Package created: /output/${BINARY_NAME}_${VERSION}_amd64.deb"
 ls -la /output
 
 # Create a symlink in the root directory for easier access by the entrypoint script
-ln -sf /output/${BINARY_NAME}_${VERSION}_amd64.deb /${BINARY_NAME}_${VERSION}_amd64.deb
-echo "Created symlink: /${BINARY_NAME}_${VERSION}_amd64.deb -> /output/${BINARY_NAME}_${VERSION}_amd64.deb"
+cp /output/${BINARY_NAME}_${VERSION}_amd64.deb /${BINARY_NAME}_${VERSION}_amd64.deb
+chmod 644 /${BINARY_NAME}_${VERSION}_amd64.deb
+echo "Copied package to: /${BINARY_NAME}_${VERSION}_amd64.deb"

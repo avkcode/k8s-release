@@ -59,7 +59,9 @@ RUN mkdir -p /output && chmod 777 /output
 
 # Create Debian package
 RUN /usr/local/bin/package-builder.sh kube-scheduler "${KUBE_VERSION}" "Kubernetes Scheduler" && \
-    ls -la /output
+    ls -la /output && \
+    cp /output/*.deb / && \
+    chmod 644 /*.deb
 
 # Make sure the output directory has the right permissions
 RUN chmod -R 777 /output
