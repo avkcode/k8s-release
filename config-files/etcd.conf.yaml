@@ -1,0 +1,34 @@
+# This is the configuration file for the etcd server.
+
+# Human-readable name for this member.
+name: 'default'
+
+# Path to the data directory.
+data-dir: /var/lib/etcd
+
+# Path to the dedicated wal directory.
+wal-dir: /var/lib/etcd/wal
+
+# Number of committed transactions to trigger a snapshot to disk.
+snapshot-count: 10000
+
+# Time (in milliseconds) of a heartbeat interval.
+heartbeat-interval: 100
+
+# Time (in milliseconds) for an election to timeout.
+election-timeout: 1000
+
+# List of comma separated URLs to listen on for peer traffic.
+listen-peer-urls: http://localhost:2380
+
+# List of comma separated URLs to listen on for client traffic.
+listen-client-urls: http://localhost:2379
+
+# Initial cluster configuration for bootstrapping.
+initial-cluster: default=http://localhost:2380
+
+# Initial cluster token for the etcd cluster during bootstrap.
+initial-cluster-token: 'etcd-cluster'
+
+# Initial cluster state ('new' or 'existing').
+initial-cluster-state: 'new'

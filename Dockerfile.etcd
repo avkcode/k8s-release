@@ -1,10 +1,10 @@
 FROM golang:1.20 AS builder
 
-# Define ARG for Kubernetes version
+# Define ARG for etcd version
 ARG ETCD_VERSION
 
 # Set the environment variable using the ARG
-ENV ETCD_VERISON=${ETCD_VERSION}
+ENV ETCD_VERSION=${ETCD_VERSION}
 
 ENV GO111MODULE=on
 ENV GOPATH=/go
@@ -29,12 +29,47 @@ RUN ls -l /etcd/bin/
 
 FROM debian:bullseye-slim
 
+# Define ARG again for the second stage
+ARG ETCD_VERSION
+
+# Set the environment variable in the second stage
+ENV ETCD_VERSION=${ETCD_VERSION}
+
 RUN apt-get update && apt-get install -y \
     bash \
+    dpkg \
+    dpkg-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /etcd/bin/etcd /usr/local/bin/etcd
 COPY --from=builder /etcd/bin/etcdctl /usr/local/bin/etcdctl
+COPY package-builder.sh /usr/local/bin/package-builder.sh
+
+# Create directories for systemd units and config files
+RUN mkdir -p /systemd-units /config-files
+
+# Copy systemd unit files and config files
+COPY systemd-units/etcd.service /systemd-units/
+COPY config-files/etcd.conf.yaml /config-files/
+
+RUN chmod +x /usr/local/bin/package-builder.sh
+
+# Create output directory first with proper permissions
+RUN mkdir -p /output && chmod 777 /output
+
+# Install dpkg-deb
+RUN apt-get update && apt-get install -y dpkg-dev && rm -rf /var/lib/apt/lists/*
+
+# Make package-builder.sh executable
+RUN chmod +x /usr/local/bin/package-builder.sh
+
+# Create output directory with proper permissions
+RUN mkdir -p /output && chmod 777 /output
+
+# Make sure the output directory has the right permissions
+RUN chmod -R 777 /output
+
+VOLUME ["/output"]
 
 ENTRYPOINT ["etcd"]
 

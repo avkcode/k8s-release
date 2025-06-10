@@ -31,11 +31,43 @@ RUN ls -l /kubernetes/_output/bin/
 
 FROM debian:bullseye-slim
 
+# Define ARG again for the second stage
+ARG KUBE_VERSION
+
+# Set the environment variable in the second stage
+ENV KUBE_VERSION=${KUBE_VERSION}
+
 RUN apt-get update && apt-get install -y \
     bash \
+    dpkg \
+    dpkg-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /kubernetes/_output/bin/kube-scheduler /usr/local/bin/kube-scheduler
+COPY package-builder.sh /usr/local/bin/package-builder.sh
+
+# Create directories for systemd units
+RUN mkdir -p /systemd-units /config-files
+
+# Copy systemd unit files
+COPY systemd-units/kube-scheduler.service /systemd-units/
+
+RUN chmod +x /usr/local/bin/package-builder.sh
+
+# Create output directory first with proper permissions
+RUN mkdir -p /output && chmod 777 /output
+
+# Create Debian package
+RUN /usr/local/bin/package-builder.sh kube-scheduler "${KUBE_VERSION}" "Kubernetes Scheduler" && \
+    ls -la /output
+
+# Make sure the output directory has the right permissions
+RUN chmod -R 777 /output
+
+VOLUME ["/output"]
+
+# Copy the packages to a more accessible location
+RUN cp /output/*.deb / || true
 
 ENTRYPOINT ["kube-scheduler"]
 

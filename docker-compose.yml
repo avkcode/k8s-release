@@ -6,7 +6,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -17,7 +17,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile.etcd
       args:
         - ETCD_VERSION=${ETCD_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl && /usr/local/bin/package-builder.sh etcd \"${ETCD_VERSION}\" \"etcd distributed key-value store\" && /usr/local/bin/package-builder.sh etcdctl \"${ETCD_VERSION}\" \"etcd command line client\" && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -38,7 +38,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -49,7 +49,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -60,7 +60,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -71,7 +71,7 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -82,6 +82,17 @@ services:
       args:
         - FLANNEL_VERSION=v0.26.4
         - FLANNEL_GIT_URL=https://github.com/flannel-io/flannel.git
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/flanneld /output/flanneld"]
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/flanneld /output/flanneld && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    volumes:
+      - ./output:/output
+      
+  calico-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.calico
+      args:
+        - CALICO_VERSION=${CALICO_VERSION}
+        - CALICO_GIT_URL=${CALICO_GIT_URL}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/calico-node /output/calico-node && cp /usr/local/bin/calico-felix /output/calico-felix && cp /usr/local/bin/calico /output/calico && cp /usr/local/bin/calico-ipam /output/calico-ipam && cp /usr/local/bin/calico-kube-controllers /output/calico-kube-controllers && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output

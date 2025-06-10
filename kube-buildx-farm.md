@@ -1,6 +1,29 @@
-Kubernetes-Based Distributed Builds with Docker Buildx
+# Kubernetes-Based Distributed Builds with Docker Buildx
 
 Docker Buildx is a powerful extension of Docker's build capabilities, enabling advanced features such as multi-platform builds and distributed builds. When combined with Kubernetes, Buildx allows you to leverage a Kubernetes cluster as a distributed build farm, significantly improving build performance and scalability.
+
+## Overview
+
+This build system supports building and packaging the following components:
+
+1. **Kubernetes Core Components**:
+   - kube-apiserver
+   - kube-controller-manager
+   - kube-scheduler
+   - kube-proxy
+   - kubelet
+   - kubectl
+
+2. **Container Networking Interface (CNI) Plugins**:
+   - Flannel (v0.26.4)
+   - Calico (v3.28.0)
+
+3. **Distributed Key-Value Store**:
+   - etcd (v3.5.9)
+
+All components are packaged as Debian (.deb) packages for easy installation and management on Debian-based systems.
+
+## Docker Registry
 
 A Docker Registry is a storage and distribution system for Docker images. It allows you to store, manage, and share container images within your environment. When using Docker Buildx for distributed builds, a Docker Registry is often used as a central repository to store intermediate and final build artifacts. This is especially important in Kubernetes-based distributed builds, where multiple nodes in the cluster need access to the same images.
 
@@ -183,3 +206,42 @@ systemctl restart docker
 - The `config.toml` file must be present in the working directory for the `create` and `append` commands to work.
 - These commands assume that the Kubernetes cluster is accessible and properly configured.
 - The `buildx` namespace must exist in the Kubernetes cluster before running the Buildx commands. Use `kubectl create ns buildx` to create it if necessary.
+
+## Building Components
+
+After setting up your Kubernetes-based build farm, you can build individual components or all components at once:
+
+```bash
+# Build all components
+make build
+
+# Build only Calico
+make build-calico
+
+# Build only etcd
+make build-etcd
+
+# Build with custom versions
+make build KUBE_VERSION=v1.29.0 CALICO_VERSION=v3.27.0
+```
+
+## Installing Packages
+
+After building, you can install the Debian packages on your target systems:
+
+```bash
+# Install Calico components
+sudo dpkg -i output/calico-node_3.28.0_amd64.deb
+sudo dpkg -i output/calico-felix_3.28.0_amd64.deb
+sudo dpkg -i output/calico_3.28.0_amd64.deb
+sudo dpkg -i output/calico-ipam_3.28.0_amd64.deb
+sudo dpkg -i output/calico-kube-controllers_3.28.0_amd64.deb
+
+# Configure Calico (example)
+sudo mkdir -p /etc/calico
+sudo cat > /etc/calico/calico.env << EOF
+NODENAME=$(hostname)
+IP=$(hostname -I | awk '{print $1}')
+CALICO_IPV4POOL_CIDR=192.168.0.0/16
+EOF
+```
