@@ -30,14 +30,67 @@ RUN git clone ${CALICO_GIT_URL} /calico && \
 
 # Build Calico binaries
 WORKDIR /calico
-RUN cd /calico/node && \
-    make build && \
-    cd /calico/felix && \
-    make build && \
-    cd /calico/cni-plugin && \
-    make build && \
+
+# Install additional dependencies needed for building libbpf
+RUN apt-get update && apt-get install -y \
+    clang \
+    llvm \
+    libelf-dev \
+    bc \
+    libbpf-dev \
+    bpftool \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create necessary directories for libbpf
+RUN mkdir -p /calico/felix/bpf-gpl/include/libbpf/src/amd64
+
+# Manually build libbpf.a
+RUN cd /calico/felix/bpf-gpl/include/libbpf/src && \
+    mkdir -p amd64 && \
+    cp /usr/lib/x86_64-linux-gnu/libbpf.a amd64/libbpf.a
+
+# Modify Makefiles to avoid using Docker
+RUN find . -name Makefile -exec sed -i 's/docker run/# docker run/g' {} \; && \
+    find . -name "*.mk" -exec sed -i 's/docker run/# docker run/g' {} \; && \
+    find . -name Makefile -exec sed -i 's/docker build/# docker build/g' {} \; && \
+    find . -name "*.mk" -exec sed -i 's/docker build/# docker build/g' {} \; && \
+    # Modify specific Makefiles to avoid Docker dependencies
+    sed -i 's|make -C ../felix libbpf|# make -C ../felix libbpf|g' /calico/node/Makefile && \
+    sed -i 's|../felix/bpf-gpl/include/libbpf/src/amd64/libbpf.a|# ../felix/bpf-gpl/include/libbpf/src/amd64/libbpf.a|g' /calico/node/Makefile
+
+# Create bin directory
+RUN mkdir -p /calico/bin
+
+# Find the correct paths for CNI plugin components and build them
+RUN mkdir -p /calico/bin && \
+    # First, let's find the main packages
+    find /calico -path "*/cni-plugin/*" -name "main.go" && \
+    # Build the CNI plugin components directly
+    cd /calico && \
+    CGO_ENABLED=0 go build -v -o /calico/bin/calico ./cni-plugin/cmd/calico && \
+    # For calico-ipam, we need to find where it's located in this version
+    if [ -d "/calico/cni-plugin/cmd/ipam" ]; then \
+        CGO_ENABLED=0 go build -v -o /calico/bin/calico-ipam ./cni-plugin/cmd/ipam; \
+    elif [ -d "/calico/cni-plugin/internal/pkg/ipam" ]; then \
+        # If it's not a separate binary but part of the main one, create a symlink
+        ln -sf /calico/bin/calico /calico/bin/calico-ipam; \
+    else \
+        # Try to find it elsewhere
+        IPAM_DIR=$(find /calico -path "*/ipam/cmd" -type d | head -1); \
+        if [ -n "$IPAM_DIR" ]; then \
+            CGO_ENABLED=0 go build -v -o /calico/bin/calico-ipam $IPAM_DIR; \
+        else \
+            # Create a symlink as fallback
+            ln -sf /calico/bin/calico /calico/bin/calico-ipam; \
+        fi; \
+    fi && \
+    # Build the other components
     cd /calico/kube-controllers && \
-    make build
+    CGO_ENABLED=0 go build -v -o /calico/bin/calico-kube-controllers ./cmd/kube-controllers/ && \
+    cd /calico/node && \
+    CGO_ENABLED=0 go build -v -o /calico/bin/calico-node ./cmd/calico-node/ && \
+    cd /calico/felix && \
+    CGO_ENABLED=0 go build -v -o /calico/bin/calico-felix ./cmd/calico-felix/
 
 # List the built binaries for verification
 RUN ls -la /calico/bin/
