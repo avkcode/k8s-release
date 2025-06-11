@@ -1,6 +1,4 @@
-# Rationale
-
-## Table of Contents
+# Table of Contents
 - [Rationale](#rationale)
   - [Project Build System](#project-build-system)
   - [Prerequisites](#prerequisites)
@@ -35,6 +33,8 @@
     - [Delete Buildx Instance](#delete-buildx-instance)
     - [Building Components](#building-components)
     - [Installing Packages](#installing-packages)
+
+## Rationale
 
 Keeping up with Kubernetes' rapid release cycle is a significant challenge, especially for platform builders who rely on Kubernetes as the foundation for their systems. Kubernetes releases a new version approximately every three months, each introducing new features, enhancements, and sometimes breaking changes.
 To address this challenge, we decided to create a reusable template for building Kubernetes using Kubernetes itself as a build farm.
