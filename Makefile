@@ -56,6 +56,7 @@ help:
 	@echo "  KUBE_BUILDER_ARM64      Use Kubernetes ARM64 builder (default: 0, set to 1 to enable)"
 	@echo "  KUBE_VERSION            Kubernetes version to use (default: v1.32.2)"
 	@echo "  ETCD_VERSION            Etcd version to use (default: v3.5.9)"
+	@echo "  PACKAGE_TYPE            Package type to build (deb or rpm, default: deb)"
 	@echo "  COMPOSE_DOCKER_CLI_BUILD Enable Docker CLI build (set to 1)"
 	@echo "  DOCKER_BUILDKIT          Enable BuildKit for Docker builds (set to 1)"
 	@echo ""
@@ -96,6 +97,9 @@ else
     DOCKER_DEFAULT_PLATFORM := linux/amd64
 endif
 
+# Define the package type (deb or rpm)
+PACKAGE_TYPE ?= deb
+
 # Multi-line variable for docker-compose arguments
 define DOCKER_ARGS
     KUBE_VERSION=$(KUBE_VERSION) \
@@ -107,7 +111,8 @@ define DOCKER_ARGS
     FLANNEL_VERSION=$(FLANNEL_VERSION) \
     CALICO_GIT_URL=$(CALICO_GIT_URL) \
     CALICO_VERSION=$(CALICO_VERSION) \
-    DOCKER_DEFAULT_PLATFORM=$(DOCKER_DEFAULT_PLATFORM) 
+    DOCKER_DEFAULT_PLATFORM=$(DOCKER_DEFAULT_PLATFORM) \
+    PACKAGE_TYPE=$(PACKAGE_TYPE)
 endef
 
 # If KUBE_BUILDER is set to 1, use buildx Kubernetes build farm

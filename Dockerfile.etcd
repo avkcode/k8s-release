@@ -39,6 +39,8 @@ RUN apt-get update && apt-get install -y \
     bash \
     dpkg \
     dpkg-dev \
+    rpm \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /etcd/bin/etcd /usr/local/bin/etcd
@@ -66,10 +68,19 @@ RUN chmod +x /usr/local/bin/package-builder.sh
 # Create output directory with proper permissions
 RUN mkdir -p /output && chmod 777 /output
 
+# Create packages based on PACKAGE_TYPE
+ENV PACKAGE_TYPE=${PACKAGE_TYPE:-deb}
+RUN /usr/local/bin/package-builder.sh etcd "${ETCD_VERSION}" "Distributed reliable key-value store" && \
+    /usr/local/bin/package-builder.sh etcdctl "${ETCD_VERSION}" "Command line client for etcd" && \
+    ls -la /output
+
 # Make sure the output directory has the right permissions
 RUN chmod -R 777 /output
 
 VOLUME ["/output"]
+
+# Copy the packages to a more accessible location
+RUN cp /output/*.deb / || true
 
 ENTRYPOINT ["etcd"]
 

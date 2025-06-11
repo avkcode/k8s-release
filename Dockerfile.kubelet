@@ -43,6 +43,8 @@ RUN apt-get update && apt-get install -y \
     conntrack \
     dpkg \
     dpkg-dev \
+    rpm \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /kubernetes/_output/bin/kubelet /usr/local/bin/kubelet
@@ -60,7 +62,8 @@ RUN chmod +x /usr/local/bin/package-builder.sh
 # Create output directory first with proper permissions
 RUN mkdir -p /output && chmod 777 /output
 
-# Create Debian package
+# Create package based on PACKAGE_TYPE
+ENV PACKAGE_TYPE=${PACKAGE_TYPE:-deb}
 RUN /usr/local/bin/package-builder.sh kubelet "${KUBE_VERSION}" "Kubernetes Node Agent" && \
     ls -la /output
 

@@ -41,6 +41,8 @@ RUN apt-get update && apt-get install -y \
     bash \
     dpkg \
     dpkg-dev \
+    rpm \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /kubernetes/_output/bin/kube-scheduler /usr/local/bin/kube-scheduler
@@ -57,11 +59,15 @@ RUN chmod +x /usr/local/bin/package-builder.sh
 # Create output directory first with proper permissions
 RUN mkdir -p /output && chmod 777 /output
 
-# Create Debian package
+# Create package based on PACKAGE_TYPE
+ENV PACKAGE_TYPE=${PACKAGE_TYPE:-deb}
 RUN /usr/local/bin/package-builder.sh kube-scheduler "${KUBE_VERSION}" "Kubernetes Scheduler" && \
     ls -la /output && \
-    cp /output/*.deb / && \
-    chmod 644 /*.deb
+    if [ "$PACKAGE_TYPE" = "deb" ]; then \
+        cp /output/*.deb / && chmod 644 /*.deb; \
+    elif [ "$PACKAGE_TYPE" = "rpm" ]; then \
+        cp /output/*.rpm / && chmod 644 /*.rpm; \
+    fi
 
 # Make sure the output directory has the right permissions
 RUN chmod -R 777 /output

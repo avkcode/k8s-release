@@ -60,6 +60,8 @@ RUN apt-get update && apt-get install -y \
     conntrack \
     dpkg \
     dpkg-dev \
+    rpm \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the built binaries from the builder stage
@@ -81,7 +83,8 @@ RUN chmod +x /usr/local/bin/package-builder.sh
 # Create output directory first with proper permissions
 RUN mkdir -p /output && chmod 777 /output
 
-# Create Debian packages
+# Create packages based on PACKAGE_TYPE
+ENV PACKAGE_TYPE=${PACKAGE_TYPE:-deb}
 RUN /usr/local/bin/package-builder.sh calico-node "${CALICO_VERSION}" "Calico Node Agent" && \
     /usr/local/bin/package-builder.sh calico-felix "${CALICO_VERSION}" "Calico Felix Agent" && \
     /usr/local/bin/package-builder.sh calico "${CALICO_VERSION}" "Calico CNI Plugin" && \
