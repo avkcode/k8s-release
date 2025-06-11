@@ -2,7 +2,6 @@
 
 Keeping up with Kubernetes' rapid release cycle is a significant challenge, especially for platform builders who rely on Kubernetes as the foundation for their systems. Kubernetes releases a new version approximately every three months, each introducing new features, enhancements, and sometimes breaking changes.
 To address this challenge, we decided to create a reusable template for building Kubernetes using Kubernetes itself as a build farm.
-The template, described in the kube-buildx-farm.md documentation, provides a structured way to set up and manage a Kubernetes-based build farm.
 
 ## Project Build System
 
