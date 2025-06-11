@@ -1,5 +1,41 @@
 # Rationale
 
+## Table of Contents
+- [Rationale](#rationale)
+  - [Project Build System](#project-build-system)
+  - [Prerequisites](#prerequisites)
+  - [Usage](#usage)
+    - [Targets](#targets)
+    - [Variables](#variables)
+  - [Build Examples](#build-examples)
+    - [Perform a Simple Build](#perform-a-simple-build)
+    - [Build RPM Packages](#build-rpm-packages)
+    - [Build Both Debian and RPM Packages](#build-both-debian-and-rpm-packages)
+    - [Build a Specific Component](#build-a-specific-component)
+    - [Build Flannel with RPM Package Type](#build-flannel-with-rpm-package-type)
+    - [Perform a Build Without Cache](#perform-a-build-without-cache)
+    - [Use a Custom Kubernetes Version](#use-a-custom-kubernetes-version)
+    - [Enable Kubernetes-Based Builds](#enable-kubernetes-based-builds)
+    - [Use ARM64 Builder](#use-arm64-builder)
+  - [Requirements](#requirements)
+    - [Tools](#tools)
+      - [Docker](#docker)
+      - [Docker Buildx](#docker-buildx)
+      - [Docker Compose](#docker-compose)
+      - [Verification](#verification)
+  - [Kubernetes-Based Distributed Builds with Docker Buildx](#kubernetes-based-distributed-builds-with-docker-buildx)
+    - [Overview](#overview)
+    - [Docker Registry](#docker-registry)
+    - [Prerequisites](#prerequisites-1)
+    - [Create Namespace](#create-namespace)
+    - [Create Buildx Instance](#create-buildx-instance)
+    - [Append Additional Node](#append-additional-node)
+    - [Multi-architecture builds](#multi-architecture-builds)
+    - [Inspect Buildx Instance](#inspect-buildx-instance)
+    - [Delete Buildx Instance](#delete-buildx-instance)
+    - [Building Components](#building-components)
+    - [Installing Packages](#installing-packages)
+
 Keeping up with Kubernetes' rapid release cycle is a significant challenge, especially for platform builders who rely on Kubernetes as the foundation for their systems. Kubernetes releases a new version approximately every three months, each introducing new features, enhancements, and sometimes breaking changes.
 To address this challenge, we decided to create a reusable template for building Kubernetes using Kubernetes itself as a build farm.
 
