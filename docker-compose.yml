@@ -6,7 +6,9 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-proxy /output/kube-proxy && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh kube-proxy \"${KUBE_VERSION}\" \"Kubernetes Network Proxy\" && find / -name '*.deb' -name '*.rpm' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -17,7 +19,9 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubelet /output/kubelet && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh kubelet \"${KUBE_VERSION}\" \"Kubernetes Node Agent\" && find / -name '*.deb' -name '*.rpm' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -27,7 +31,9 @@ services:
       dockerfile: Dockerfile.etcd
       args:
         - ETCD_VERSION=${ETCD_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl && /usr/local/bin/package-builder.sh etcd \"${ETCD_VERSION}\" \"etcd distributed key-value store\" && /usr/local/bin/package-builder.sh etcdctl \"${ETCD_VERSION}\" \"etcd command line client\" && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/etcd /output/etcd && cp /usr/local/bin/etcdctl /output/etcdctl && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh etcd \"${ETCD_VERSION}\" \"etcd distributed key-value store\" && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh etcdctl \"${ETCD_VERSION}\" \"etcd command line client\" && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -38,7 +44,9 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-scheduler /output/kube-scheduler && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh kube-scheduler \"${KUBE_VERSION}\" \"Kubernetes Scheduler\" && find / -name '*.deb' -name '*.rpm' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -49,7 +57,9 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-controller-manager /output/kube-controller-manager && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh kube-controller-manager \"${KUBE_VERSION}\" \"Kubernetes Controller Manager\" && find / -name '*.deb' -name '*.rpm' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -60,7 +70,9 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kube-apiserver /output/kube-apiserver && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh kube-apiserver \"${KUBE_VERSION}\" \"Kubernetes API Server\" && find / -name '*.deb' -name '*.rpm' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -71,7 +83,9 @@ services:
       args:
         - KUBE_GIT_URL=${KUBE_GIT_URL}
         - KUBE_VERSION=${KUBE_VERSION}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/kubectl /output/kubectl && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh kubectl \"${KUBE_VERSION}\" \"Kubernetes Command Line Tool\" && find / -name '*.deb' -name '*.rpm' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
 
@@ -82,7 +96,9 @@ services:
       args:
         - FLANNEL_VERSION=v0.26.4
         - FLANNEL_GIT_URL=https://github.com/flannel-io/flannel.git
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/flanneld /output/flanneld && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/flanneld /output/flanneld && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh flanneld \"${FLANNEL_VERSION}\" \"Flannel Network Fabric for Containers\" && find / -name '*.deb' -name '*.rpm' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output
       
@@ -93,6 +109,8 @@ services:
       args:
         - CALICO_VERSION=${CALICO_VERSION}
         - CALICO_GIT_URL=${CALICO_GIT_URL}
-    entrypoint: ["sh", "-c", "cp /usr/local/bin/calico-node /output/calico-node && cp /usr/local/bin/calico-felix /output/calico-felix && cp /usr/local/bin/calico /output/calico && cp /usr/local/bin/calico-ipam /output/calico-ipam && cp /usr/local/bin/calico-kube-controllers /output/calico-kube-controllers && find / -name '*.deb' -exec cp {} /output/ \\; && ls -la /output/"]
+    environment:
+      - PACKAGE_TYPE=${PACKAGE_TYPE}
+    entrypoint: ["sh", "-c", "cp /usr/local/bin/calico-node /output/calico-node && cp /usr/local/bin/calico-felix /output/calico-felix && cp /usr/local/bin/calico /output/calico && cp /usr/local/bin/calico-ipam /output/calico-ipam && cp /usr/local/bin/calico-kube-controllers /output/calico-kube-controllers && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh calico-node \"${CALICO_VERSION}\" \"Calico Node Agent\" && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh calico-felix \"${CALICO_VERSION}\" \"Calico Felix Agent\" && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh calico \"${CALICO_VERSION}\" \"Calico CNI Plugin\" && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh calico-ipam \"${CALICO_VERSION}\" \"Calico IPAM Plugin\" && PACKAGE_TYPE=${PACKAGE_TYPE} /usr/local/bin/package-builder.sh calico-kube-controllers \"${CALICO_VERSION}\" \"Calico Kubernetes Controllers\" && find / -name '*.deb' -name '*.rpm' -exec cp {} /output/ \\; && ls -la /output/"]
     volumes:
       - ./output:/output

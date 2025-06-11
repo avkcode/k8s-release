@@ -42,32 +42,86 @@ make check-tools
 |`COMPOSE_DOCKER_CLI_BUILD`|Enable Docker CLI build. Set to `1` to enable.|`1`|
 |`DOCKER_BUILDKIT`|Enable BuildKit for Docker builds. Set to `1` to enable.|`1`|
 
-## Perform a Simple Build
+## Build Examples
 
-To perform a build using the default settings:
-```
+### Perform a Simple Build
+
+To perform a build using the default settings (Debian packages):
+```bash
 make build
 ```
 
-Perform a Build Without Cache
+### Build RPM Packages
+
+To build RPM packages instead of Debian packages:
+```bash
+make build PACKAGE_TYPE=rpm
+```
+
+### Build Both Debian and RPM Packages
+
+To build both Debian and RPM packages:
+```bash
+make build PACKAGE_TYPE=all
+```
+
+### Build a Specific Component
+
+To build only a specific component (e.g., kubelet):
+```bash
+make build-kubelet
+```
+
+### Build Flannel with RPM Package Type
+
+To build Flannel as an RPM package:
+```bash
+make build-flannel PACKAGE_TYPE=rpm
+```
+
+Example output:
+```
+flannel-builder-1  | RPM package successfully created at /output/flanneld-0.26.4-1.x86_64.rpm
+flannel-builder-1  | Packages created:
+flannel-builder-1  | total 163928
+flannel-builder-1  | drwxrwxrwx 2 root root     4096 Jun 11 12:48 .
+flannel-builder-1  | drwxr-xr-x 1 root root     4096 Jun 11 12:48 ..
+flannel-builder-1  | -rwxrwxrwx 1 root root 32664867 Jun 11 12:33 etcd
+flannel-builder-1  | -rwxrwxrwx 1 root root 15786038 Jun 11 12:34 etcd-3.5.9-1.x86_64.rpm
+flannel-builder-1  | -rwxrwxrwx 1 root root 13511588 Jun 11 12:33 etcd_3.5.9_amd64.deb
+flannel-builder-1  | -rwxrwxrwx 1 root root 24894369 Jun 11 12:33 etcdctl
+flannel-builder-1  | -rwxrwxrwx 1 root root 12190647 Jun 11 12:34 etcdctl-3.5.9-1.x86_64.rpm
+flannel-builder-1  | -rwxrwxrwx 1 root root 10538840 Jun 11 12:34 etcdctl_3.5.9_amd64.deb
+flannel-builder-1  | -rwxrwxrwx 1 root root 44489368 Jun 11 12:48 flanneld
+flannel-builder-1  | -rwxrwxrwx 1 root root 13763680 Jun 11 12:48 flanneld-0.26.4-1.x86_64.rpm
+```
+
+### Perform a Build Without Cache
 
 To perform a build without using the cache:
-```
+```bash
 make build-no-cache
 ```
 
-Use a Custom Kubernetes Version
+### Use a Custom Kubernetes Version
 
-To perform a build with a custom Kubernetes version (e.g., v1.29.0):
+To perform a build with a custom Kubernetes version:
+```bash
+make build KUBE_VERSION=v1.33.0
 ```
-make build KUBE_VERSION=v1.29.0
-```
-Enable Kubernetes-Based Builds
+
+### Enable Kubernetes-Based Builds
 
 To enable Kubernetes-based distributed builds:
-
-```
+```bash
 make build KUBE_BUILDER=1
+```
+
+### Use ARM64 Builder
+
+To use the ARM64 builder for cross-platform builds:
+```bash
+make build KUBE_BUILDER_ARM64=1
 ```
 
 Notes
@@ -125,4 +179,254 @@ This command checks for the presence and functionality of Docker, Docker Buildx,
 Ensure that Docker is running and properly configured on your system before using the Makefile.
 If you plan to use Kubernetes-based distributed builds (enabled by setting KUBE_BUILDER=1), ensure that your Kubernetes cluster is properly configured and accessible.
 The check-tools target in the Makefile is a convenient way to validate your setup before proceeding with builds.
+
+---
+
+# Kubernetes-Based Distributed Builds with Docker Buildx
+
+Docker Buildx is a powerful extension of Docker's build capabilities, enabling advanced features such as multi-platform builds and distributed builds. When combined with Kubernetes, Buildx allows you to leverage a Kubernetes cluster as a distributed build farm, significantly improving build performance and scalability.
+
+## Overview
+
+This build system supports building and packaging the following components:
+
+1. **Kubernetes Core Components**:
+   - kube-apiserver
+   - kube-controller-manager
+   - kube-scheduler
+   - kube-proxy
+   - kubelet
+   - kubectl
+
+2. **Container Networking Interface (CNI) Plugins**:
+   - Flannel (v0.26.4)
+   - Calico (v3.28.0)
+
+3. **Distributed Key-Value Store**:
+   - etcd (v3.5.9)
+
+All components are packaged as Debian (.deb) packages for easy installation and management on Debian-based systems.
+
+## Docker Registry
+
+A Docker Registry is a storage and distribution system for Docker images. It allows you to store, manage, and share container images within your environment. When using Docker Buildx for distributed builds, a Docker Registry is often used as a central repository to store intermediate and final build artifacts. This is especially important in Kubernetes-based distributed builds, where multiple nodes in the cluster need access to the same images.
+
+[Buildx Kubernetes driver](https://docs.docker.com/build/builders/drivers/kubernetes)
+
+## Prerequisites
+
+Kubernetes Cluster:
+Ensure you have a running Kubernetes cluster (e.g., Minikube, Kind, or a production-grade cluster like GKE, EKS, or AKS).
+
+Install and configure kubectl, the Kubernetes command-line tool. Verify it works by running:
+```
+kubectl version --client
+```
+Ensure the buildx namespace exists. If it doesn't, create it:
+```
+kubectl create namespace buildx
+```
+
+## Create Namespace
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-registry
+  namespace: buildx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docker-registry
+  template:
+    metadata:
+      labels:
+        app: docker-registry
+    spec:
+      containers:
+      - name: registry
+        image: registry:2
+        ports:
+        - containerPort: 5000
+        env:
+        - name: REGISTRY_STORAGE_DELETE_ENABLED
+          value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-registry
+  namespace: buildx
+spec:
+  type: ClusterIP
+  selector:
+    app: docker-registry
+  ports:
+  - port: 5000
+    targetPort: 5000
+```
+
+Use kubectl apply to deploy the Docker Registry:
+```
+kubectl apply -f docker-registry.yaml
+```
+Output:
+```
+deployment.apps/docker-registry created
+service/docker-registry created
+```
+
+Verify the Deployment:
+Check if the Docker Registry is running:
+```
+kubectl get pods -n buildx
+```
+
+Output (example):
+```
+NAME                               READY   STATUS    RESTARTS   AGE
+docker-registry-7c8b5c6c5d-abcde   1/1     Running   0          30s
+```
+
+Verify the Service:
+Check if the service is created and accessible:
+```
+kubectl get svc -n buildx
+```
+
+Output (example):
+```
+NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+docker-registry   ClusterIP   10.96.123.45    <none>        5000/TCP   1m
+```
+## Create Buildx Instance
+
+Create a new Buildx instance named `kube-build-farm` using the Kubernetes driver. This command sets up the instance with 2 replicas, CPU limits, and a custom configuration file. Ensure the `buildx` namespace exists before running this command.
+
+```
+docker buildx create \
+    --platform amd64 \
+    --name kube-build-farm \
+    --driver kubernetes \
+    --driver-opt loadbalance=random \
+    --driver-opt replicas=2 \
+    --driver-opt namespace=buildx \
+    --driver-opt limits.cpu=1 \
+    --config config-remote.toml \
+    --bootstrap
+```
+
+## Append Additional Node
+
+Append an additional node to the existing `kube-build-farm` Buildx instance. This command ensures the new node uses the same configuration and Kubernetes namespace.
+```
+docker buildx create \
+    --platform amd64 \
+    --append \
+    --name <INSTANCE NAME> \
+    --driver kubernetes \
+    --driver-opt loadbalance=random \
+    --driver-opt replicas=2 \
+    --driver-opt namespace=buildx \
+    --driver-opt limits.cpu=1 \
+    --config config-remote.toml \
+    --bootstrap
+```
+## Multi-architecture builds 
+
+Performing multi-architecture builds (e.g., AMD64 and ARM64) using a single physical builder instance.
+
+```bash
+docker buildx create \
+  --bootstrap \
+  --name=<INSTANCE NAME> \
+  --driver=kubernetes \
+  --driver-opt=namespace=buildx,qemu.install=true
+```
+
+The qemu.install=true option is required for cross-architecture builds.
+
+## Inspect Buildx Instance
+
+Inspect the configuration and status of the `kube-build-farm` Buildx instance. This command provides details about the builder's setup and current state.
+```
+docker buildx inspect kube-build-farm
+```
+
+## Delete Buildx Instance
+
+Steps to Manually Clean Up:
+Locate Buildx Configuration Files  Docker Buildx stores its builder configurations in the following directory:
+```
+~/.docker/buildx
+```
+
+Check this directory for files related to kube-build-farm. You can list the files with:
+```
+ls -la ~/.docker/buildx
+```
+
+Remove the Corrupted Builder File  Identify and delete the file associated with kube-build-farm. For example:
+```
+rm ~/.docker/buildx/<corrupted-file>
+```
+
+Reset Buildx (Optional)  If the issue persists, you can reset Docker Buildx entirely by removing all builder instances and configurations:
+```
+docker buildx prune --all
+```
+
+This will remove all unused builders, containers, and cached data.
+Restart Docker Daemon  Restart the Docker daemon to ensure all changes take effect:
+```
+systemctl restart docker
+```
+
+## Notes
+
+- Ensure that Docker and Buildx are installed and properly configured before running the Buildx commands.
+- The `config.toml` file must be present in the working directory for the `create` and `append` commands to work.
+- These commands assume that the Kubernetes cluster is accessible and properly configured.
+- The `buildx` namespace must exist in the Kubernetes cluster before running the Buildx commands. Use `kubectl create ns buildx` to create it if necessary.
+
+## Building Components
+
+After setting up your Kubernetes-based build farm, you can build individual components or all components at once:
+
+```bash
+# Build all components
+make build
+
+# Build only Calico
+make build-calico
+
+# Build only etcd
+make build-etcd
+
+# Build with custom versions
+make build KUBE_VERSION=v1.29.0 CALICO_VERSION=v3.27.0
+```
+
+## Installing Packages
+
+After building, you can install the Debian packages on your target systems:
+
+```bash
+# Install Calico components
+sudo dpkg -i output/calico-node_3.28.0_amd64.deb
+sudo dpkg -i output/calico-felix_3.28.0_amd64.deb
+sudo dpkg -i output/calico_3.28.0_amd64.deb
+sudo dpkg -i output/calico-ipam_3.28.0_amd64.deb
+sudo dpkg -i output/calico-kube-controllers_3.28.0_amd64.deb
+
+# Configure Calico (example)
+sudo mkdir -p /etc/calico
+sudo cat > /etc/calico/calico.env << EOF
+NODENAME=$(hostname)
+IP=$(hostname -I | awk '{print $1}')
+CALICO_IPV4POOL_CIDR=192.168.0.0/16
+EOF
+```
 
