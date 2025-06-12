@@ -84,7 +84,7 @@ jobs:
       - name: Prepare release artifacts
         run: |
           mkdir -p release-artifacts
-          find all-artifacts -type f -name "*.deb" -o -name "*.rpm" -o -name "kube*" -o -name "etcd*" -o -name "flannel*" -o -name "calico*" | xargs -I{} cp {} release-artifacts/
+          find all-artifacts -type f \( -name "*.deb" -o -name "*.rpm" -o -name "kube*" -o -name "etcd*" -o -name "flannel*" -o -name "calico*" \) | xargs -I{} cp {} release-artifacts/
 
       - name: Upload combined artifacts
         uses: actions/upload-artifact@v4
