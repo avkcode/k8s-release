@@ -99,11 +99,49 @@ jobs:
           apt-get update && apt-get install -y createrepo-c
           createrepo .
           
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Publish to GitHub Packages
+        run: |
+          # First upload as artifact for easy download
+          echo "Uploading package repositories as artifacts"
+          mkdir -p package-repositories
+          cp -r debian/ rpm/ package-repositories/
+          
+          # Then publish packages to GitHub Packages registry
+          echo "Publishing packages to GitHub Packages registry"
+          for pkg in release-artifacts/*.deb release-artifacts/*.rpm; do
+            if [ -f "$pkg" ]; then
+              # The packages are already uploaded to the GitHub Release
+              # This step ensures they're also visible in the Packages UI
+              pkg_name=$(basename $pkg)
+              pkg_version=$(echo $pkg_name | grep -oP '(?<=_)[0-9]+\.[0-9]+\.[0-9]+(?=_)')
+              if [ -z "$pkg_version" ]; then
+                # Extract version from tag
+                pkg_version="${{ steps.get_version.outputs.VERSION }}"
+                pkg_version="${pkg_version#v}"
+              fi
+              
+              echo "Publishing $pkg_name with version $pkg_version to GitHub Packages"
+              
+              # Use GitHub API to ensure package is visible in Packages UI
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary @"$pkg" \
+                "https://api.github.com/orgs/$(echo ${{ github.repository }} | cut -d '/' -f 1)/packages/generic/kubernetes-packages/$pkg_version/$pkg_name"
+            fi
+          done
+          
+      - name: Upload package repositories as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: package-repositories
-          path: |
-            debian/
-            rpm/
+          path: package-repositories/
           retention-days: 30
