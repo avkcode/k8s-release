@@ -20,6 +20,7 @@ jobs:
           - kubectl
           - flannel
           - calico
+          - certificates
         package_type: [deb, rpm]
 
     steps:
