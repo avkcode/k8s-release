@@ -32,7 +32,6 @@
     - [Use ARM64 Builder](#use-arm64-builder)
   - [Continuous Integration](#continuous-integration)
     - [GitHub Actions](#github-actions)
-    - [Jenkins](#jenkins)
   - [Requirements](#requirements)
     - [Tools](#tools)
       - [Docker](#docker)
@@ -194,7 +193,7 @@ Notes
 
 ## Continuous Integration
 
-This project uses both GitHub Actions and Jenkins for continuous integration and delivery of Kubernetes packages.
+This project uses both GitHub Actions for continuous integration and delivery of Kubernetes packages.
 
 ### GitHub Actions
 
@@ -226,37 +225,6 @@ To manually trigger a build with custom versions:
 3. Click "Run workflow"
 4. Enter the desired versions and package type
 5. Click "Run workflow" to start the build
-
-### Jenkins
-
-The project also includes Jenkins configuration for CI/CD in enterprise environments:
-
-1. **Jenkins Setup** (`.jenkins/` directory):
-   - Dockerfile for creating a custom Jenkins image with necessary tools
-   - Docker Compose configuration for running Jenkins with Docker support
-   - Scripts for publishing packages
-
-2. **Jenkinsfile Pipeline**:
-   - Parameterized pipeline for building all components
-   - Parallel builds for faster completion
-   - Artifact collection and package repository creation
-   - Optional publishing to GitHub Packages (when on main branch)
-
-#### Setting Up Jenkins
-
-To set up Jenkins for this project:
-
-1. Navigate to the `.jenkins` directory
-2. Build and start the Jenkins container:
-   ```bash
-   cd .jenkins
-   docker-compose up -d
-   ```
-3. Access Jenkins at http://localhost:8080
-4. Create a new pipeline job using the Jenkinsfile from this repository
-5. Configure GitHub credentials for package publishing
-
-The Jenkins pipeline supports the same parameters as the GitHub Actions workflows, allowing for consistent builds across both CI systems.
 
 ---
 
