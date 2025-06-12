@@ -332,6 +332,29 @@ chmod -R 777 /output
 echo "Packages created:"
 ls -la /output
 
+# List package contents for Debian packages
+if [ "$PACKAGE_TYPE" = "deb" ] || [ "$PACKAGE_TYPE" = "all" ]; then
+    DEB_FILE="/output/${BINARY_NAME}_${VERSION}_amd64.deb"
+    if [ -f "$DEB_FILE" ]; then
+        echo "Contents of $DEB_FILE:"
+        dpkg -c "$DEB_FILE"
+        
+        echo "Package information for $DEB_FILE:"
+        dpkg -I "$DEB_FILE"
+    fi
+fi
+
+# List package contents for RPM packages
+if [ "$PACKAGE_TYPE" = "rpm" ] || [ "$PACKAGE_TYPE" = "all" ]; then
+    if [ -n "${RPM_FILE}" ]; then
+        echo "Contents of ${RPM_FILE}:"
+        rpm -qlp "${RPM_FILE}" 2>/dev/null || echo "Could not list RPM contents (rpm command may not be available)"
+        
+        echo "Package information for ${RPM_FILE}:"
+        rpm -qip "${RPM_FILE}" 2>/dev/null || echo "Could not show RPM info (rpm command may not be available)"
+    fi
+fi
+
 # Copy message based on what was built
 if [ "$PACKAGE_TYPE" = "deb" ]; then
     echo "Copied package to: /${BINARY_NAME}_${VERSION}_amd64.deb"

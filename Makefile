@@ -14,6 +14,7 @@ KUBE_VERSION ?= v1.32.2
 # Define the etcd version to use
 ETCD_VERSION ?= v3.5.9
 
+
 KUBE_GIT_URL ?= https://github.com/kubernetes/kubernetes.git
 
 # Define the Flannel version to use
@@ -24,6 +25,9 @@ FLANNEL_GIT_URL ?= https://github.com/flannel-io/flannel.git
 CALICO_VERSION ?= v3.28.0
 CALICO_GIT_URL ?= https://github.com/projectcalico/calico.git
 
+# Define the certificate version to use
+CERT_VERSION ?= 1.0.0
+
 # Help target: Displays available targets and variables
 help:
 	@echo "Usage: make <target>"
@@ -31,6 +35,7 @@ help:
 	@echo "Targets:"
 	@echo "  help                    Display this help message"
 	@echo "  build                   Perform a simple build using Buildx (all components)"
+	@echo "  build-certificates      Build only certificates"
 	@echo "  build-no-cache          Perform a simple build using Buildx without cache"
 	@echo "  build-kube-proxy        Build only kube-proxy"
 	@echo "  build-kubelet           Build only kubelet"
@@ -51,6 +56,7 @@ help:
 	@echo "  FLANNEL_VERSION         Flannel version to use (default: v0.26.4)"
 	@echo "  CALICO_GIT_URL          Calico Git repository URL (default: https://github.com/projectcalico/calico.git)"
 	@echo "  CALICO_VERSION          Calico version to use (default: v3.28.0)"
+	@echo "  CERT_VERSION            Certificate version to use (default: 1.0.0)"
 	@echo "  KUBE_GIT_URL            Kubernetes Git repository URL (default: https://github.com/kubernetes/kubernetes.git)"
 	@echo "  KUBE_BUILDER            Use Kubernetes to build images (default: 0, set to 1 to enable)"
 	@echo "  KUBE_BUILDER_ARM64      Use Kubernetes ARM64 builder (default: 0, set to 1 to enable)"
@@ -99,8 +105,8 @@ endif
 # Define the package type (deb or rpm)
 PACKAGE_TYPE ?= deb
 
-# Define the Docker Compose command to use (default to docker-compose, but allow override)
-DOCKER_COMPOSE ?= docker compose
+# Check if docker compose v2 is available, otherwise use docker-compose
+DOCKER_COMPOSE := $(shell if docker compose version >/dev/null 2>&1; then echo "docker compose"; else echo "docker-compose"; fi)
 
 # Multi-line variable for docker-compose arguments
 define DOCKER_ARGS
@@ -121,14 +127,16 @@ endef
 build: switch-builder
 	@echo "Starting simple build process..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up
 	@$(BUILD_INFO)
 
 # Perform a build without using the cache
 build-no-cache: switch-builder
 	@echo "Starting build process without cache..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build --no-cache
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build --no-cache
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up
 	@$(BUILD_INFO)
 
 # Variables
@@ -159,63 +167,80 @@ clean:
 build-kube-proxy: switch-builder
 	@echo "Building kube-proxy..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kube-proxy-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build kube-proxy-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up kube-proxy-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kubelet
 build-kubelet: switch-builder
 	@echo "Building kubelet..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kubelet-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build kubelet-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up kubelet-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-etcd
 build-etcd: switch-builder
 	@echo "Building etcd..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build etcd-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build etcd-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up etcd-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-scheduler
 build-kube-scheduler: switch-builder
 	@echo "Building kube-scheduler..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kube-scheduler-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build kube-scheduler-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up kube-scheduler-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-controller-manager
 build-kube-controller-manager: switch-builder
 	@echo "Building kube-controller-manager..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kube-controller-manager-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build kube-controller-manager-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up kube-controller-manager-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-apiserver
 build-kube-apiserver: switch-builder
 	@echo "Building kube-apiserver..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kube-apiserver-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build kube-apiserver-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up kube-apiserver-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kubectl
 build-kubectl: switch-builder
 	@echo "Building kubectl..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kubectl-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build kubectl-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up kubectl-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-flannel
 build-flannel: switch-builder
 	@echo "Building flannel..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build flannel-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build flannel-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up flannel-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-calico
 build-calico: switch-builder
 	@echo "Building calico..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build calico-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build calico-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up calico-builder
+	@$(BUILD_INFO)
+
+.PHONY: build-certificates
+build-certificates: switch-builder
+	@echo "Building certificates..."
+	@$(eval START_TIME := $(shell date +%s))
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) build certificates-builder
+	$(DOCKER_ARGS) CERT_VERSION=$(CERT_VERSION) $(DOCKER_COMPOSE) up certificates-builder
 	@$(BUILD_INFO)
 
 # Target: Create a Git tag and release on GitHub

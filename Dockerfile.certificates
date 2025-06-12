@@ -1,0 +1,27 @@
+FROM debian:bullseye-slim
+
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    openssl \
+    dpkg \
+    dpkg-dev \
+    rpm \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the CA configuration file
+COPY ca.conf /ca.conf
+
+# Create directories for certificates
+RUN mkdir -p /certs /output
+
+# Create a script to generate certificates
+COPY generate-certs.sh /usr/local/bin/generate-certs.sh
+RUN chmod +x /usr/local/bin/generate-certs.sh
+
+# Create output directory with proper permissions
+RUN mkdir -p /output && chmod 777 /output
+
+VOLUME ["/output"]
+
+ENTRYPOINT ["/usr/local/bin/generate-certs.sh"]
