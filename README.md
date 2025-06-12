@@ -131,20 +131,27 @@ make build-flannel PACKAGE_TYPE=rpm
 
 Example output:
 ```
-calico                                    flanneld
-calico_3.28.0_amd64.deb                   flanneld_0.26.4_amd64.deb
-calico-felix                              kube-apiserver
-calico-felix_3.28.0_amd64.deb             kube-apiserver_1.32.2_amd64.deb
-calico-ipam                               kube-controller-manager
-calico-ipam_3.28.0_amd64.deb              kube-controller-manager_1.32.2_amd64.deb
-calico-kube-controllers                   kubectl
-calico-kube-controllers_3.28.0_amd64.deb  kubectl_1.32.2_amd64.deb
-calico-node                               kubelet
-calico-node_3.28.0_amd64.deb              kubelet_1.32.2_amd64.deb
-etcd                                      kube-proxy
-etcd_3.5.9_amd64.deb                      kube-proxy_1.32.2_amd64.deb
-etcdctl                                   kube-scheduler
-etcdctl_3.5.9_amd64.deb                   kube-scheduler_1.32.2_amd64.deb
+calico                                       flanneld
+calico-3.28.0-1.x86_64.rpm                   flanneld-0.26.4-1.x86_64.rpm
+calico_3.28.0_amd64.deb                      flanneld_0.26.4_amd64.deb
+calico-felix                                 kube-apiserver
+calico-felix-3.28.0-1.x86_64.rpm             kube-apiserver-1.32.2-1.x86_64.rpm
+calico-felix_3.28.0_amd64.deb                kube-apiserver_1.32.2_amd64.deb
+calico-ipam                                  kube-controller-manager
+calico-ipam-3.28.0-1.x86_64.rpm              kube-controller-manager-1.32.2-1.x86_64.rpm
+calico-ipam_3.28.0_amd64.deb                 kube-controller-manager_1.32.2_amd64.deb
+calico-kube-controllers                      kubectl
+calico-kube-controllers-3.28.0-1.x86_64.rpm  kubectl-1.32.2-1.x86_64.rpm
+calico-kube-controllers_3.28.0_amd64.deb     kubectl_1.32.2_amd64.deb
+calico-node                                  kubelet
+calico-node-3.28.0-1.x86_64.rpm              kubelet-1.32.2-1.x86_64.rpm
+calico-node_3.28.0_amd64.deb                 kubelet_1.32.2_amd64.deb
+etcd                                         kube-proxy
+etcd-3.5.9-1.x86_64.rpm                      kube-proxy-1.32.2-1.x86_64.rpm
+etcd_3.5.9_amd64.deb                         kube-proxy_1.32.2_amd64.deb
+etcdctl                                      kube-scheduler
+etcdctl-3.5.9-1.x86_64.rpm                   kube-scheduler-1.32.2-1.x86_64.rpm
+etcdctl_3.5.9_amd64.deb                      kube-scheduler_1.32.2_amd64.deb
 ```
 
 ### Perform a Build Without Cache
