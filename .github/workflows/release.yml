@@ -53,6 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -73,3 +74,36 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          
+      - name: Set up package repositories
+        run: |
+          mkdir -p debian/main rpm
+          
+          # Copy DEB packages to debian repo structure
+          cp release-artifacts/*.deb debian/main/ || true
+          
+          # Copy RPM packages to rpm repo structure
+          cp release-artifacts/*.rpm rpm/ || true
+          
+      - name: Create Debian repository
+        run: |
+          cd debian
+          apt-get update && apt-get install -y dpkg-dev
+          dpkg-scanpackages main /dev/null > main/Packages
+          cat main/Packages
+          gzip -k main/Packages
+          
+      - name: Create RPM repository
+        run: |
+          cd rpm
+          apt-get update && apt-get install -y createrepo-c
+          createrepo .
+          
+      - name: Publish to GitHub Packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-repositories
+          path: |
+            debian/
+            rpm/
+          retention-days: 30

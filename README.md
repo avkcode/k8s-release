@@ -265,6 +265,42 @@ This build system supports building and packaging the following components:
 
 All components are packaged as Debian (.deb) packages for easy installation and management on Debian-based systems.
 
+## Packages
+
+Kubernetes packages built by this repository are available in several ways:
+
+1. **GitHub Releases**: Each release includes DEB and RPM packages for all components.
+   Visit the [Releases page](https://github.com/avkcode/k8s-release/releases) to download packages.
+
+2. **GitHub Packages**: Packages are also published to GitHub Packages and can be found in the "Packages" section of this repository.
+   
+   For DEB packages:
+   ```bash
+   # Add the repository to your sources
+   echo "deb [trusted=yes] https://github.com/avkcode/k8s-release/debian/ main main" | sudo tee /etc/apt/sources.list.d/kubernetes-custom.list
+   sudo apt update
+   sudo apt install kubernetes-ca-certs kubernetes-apiserver-certs # etc.
+   ```
+   
+   For RPM packages:
+   ```bash
+   # Add the repository to your yum configuration
+   sudo tee /etc/yum.repos.d/kubernetes-custom.repo << EOF
+   [kubernetes-custom]
+   name=Kubernetes Custom Packages
+   baseurl=https://github.com/avkcode/k8s-release/rpm/
+   enabled=1
+   gpgcheck=0
+   EOF
+   
+   sudo yum install kubernetes-ca-certs kubernetes-apiserver-certs # etc.
+   ```
+
+3. **Package Contents**: Each package contains the necessary binaries, systemd service files, and configuration files for the respective component.
+   - Certificate packages contain the TLS certificates for secure communication between Kubernetes components
+   - Component packages (like etcd, kubelet, etc.) contain the binaries and service files
+   - All packages are available in both DEB and RPM formats
+
 ## Docker Registry
 
 A Docker Registry is a storage and distribution system for Docker images. It allows you to store, manage, and share container images within your environment. When using Docker Buildx for distributed builds, a Docker Registry is often used as a central repository to store intermediate and final build artifacts. This is especially important in Kubernetes-based distributed builds, where multiple nodes in the cluster need access to the same images.

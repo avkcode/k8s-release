@@ -72,6 +72,9 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -89,3 +92,38 @@ jobs:
           name: kubernetes-packages
           path: release-artifacts/
           retention-days: 7
+          
+      - name: Set up package repositories
+        run: |
+          mkdir -p debian/main rpm
+          
+          # Copy DEB packages to debian repo structure
+          cp release-artifacts/*.deb debian/main/ || true
+          
+          # Copy RPM packages to rpm repo structure
+          cp release-artifacts/*.rpm rpm/ || true
+          
+      - name: Create Debian repository
+        if: ${{ github.event.inputs.package_type == 'deb' || github.event.inputs.package_type == null }}
+        run: |
+          cd debian
+          apt-get update && apt-get install -y dpkg-dev
+          dpkg-scanpackages main /dev/null > main/Packages
+          cat main/Packages
+          gzip -k main/Packages
+          
+      - name: Create RPM repository
+        if: ${{ github.event.inputs.package_type == 'rpm' }}
+        run: |
+          cd rpm
+          apt-get update && apt-get install -y createrepo-c
+          createrepo .
+          
+      - name: Publish to GitHub Packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-repositories
+          path: |
+            debian/
+            rpm/
+          retention-days: 30
