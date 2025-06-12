@@ -66,8 +66,7 @@ check-tools:
 	@echo "Checking if required tools are installed..."
 	@command -v docker >/dev/null 2>&1 || { echo >&2 "Error: Docker is not installed or not in PATH."; exit 1; }
 	@docker --version >/dev/null 2>&1 || { echo >&2 "Error: Docker is not functioning correctly."; exit 1; }
-	@command -v docker-compose >/dev/null 2>&1 || { echo >&2 "Error: Docker Compose is not installed or not in PATH."; exit 1; }
-	@docker-compose --version >/dev/null 2>&1 || { echo >&2 "Error: Docker Compose is not functioning correctly."; exit 1; }
+	@docker compose version >/dev/null 2>&1 || { echo >&2 "Error: Docker Compose is not installed or not functioning correctly."; exit 1; }
 	@docker buildx version >/dev/null 2>&1 || { echo >&2 "Error: Docker Buildx is not installed or not functioning correctly."; exit 1; }
 	@echo "All required tools are installed and functional."
 
@@ -100,6 +99,9 @@ endif
 # Define the package type (deb or rpm)
 PACKAGE_TYPE ?= deb
 
+# Define the Docker Compose command to use (default to docker-compose, but allow override)
+DOCKER_COMPOSE ?= docker compose
+
 # Multi-line variable for docker-compose arguments
 define DOCKER_ARGS
     KUBE_VERSION=$(KUBE_VERSION) \
@@ -119,14 +121,14 @@ endef
 build: switch-builder
 	@echo "Starting simple build process..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build
 	@$(BUILD_INFO)
 
 # Perform a build without using the cache
 build-no-cache: switch-builder
 	@echo "Starting build process without cache..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build --no-cache
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build --no-cache
 	@$(BUILD_INFO)
 
 # Variables
@@ -157,63 +159,63 @@ clean:
 build-kube-proxy: switch-builder
 	@echo "Building kube-proxy..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build kube-proxy-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kube-proxy-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kubelet
 build-kubelet: switch-builder
 	@echo "Building kubelet..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build kubelet-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kubelet-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-etcd
 build-etcd: switch-builder
 	@echo "Building etcd..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build etcd-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build etcd-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-scheduler
 build-kube-scheduler: switch-builder
 	@echo "Building kube-scheduler..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build kube-scheduler-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kube-scheduler-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-controller-manager
 build-kube-controller-manager: switch-builder
 	@echo "Building kube-controller-manager..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build kube-controller-manager-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kube-controller-manager-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-apiserver
 build-kube-apiserver: switch-builder
 	@echo "Building kube-apiserver..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build kube-apiserver-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kube-apiserver-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kubectl
 build-kubectl: switch-builder
 	@echo "Building kubectl..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build kubectl-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build kubectl-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-flannel
 build-flannel: switch-builder
 	@echo "Building flannel..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build flannel-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build flannel-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-calico
 build-calico: switch-builder
 	@echo "Building calico..."
 	@$(eval START_TIME := $(shell date +%s))
-	$(DOCKER_ARGS) docker-compose up --build calico-builder
+	$(DOCKER_ARGS) $(DOCKER_COMPOSE) up --build calico-builder
 	@$(BUILD_INFO)
 
 # Target: Create a Git tag and release on GitHub

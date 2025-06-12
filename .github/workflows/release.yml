@@ -37,6 +37,7 @@ jobs:
         run: |
           KUBE_VERSION=${{ steps.get_version.outputs.VERSION }} \
           PACKAGE_TYPE=${{ matrix.package_type }} \
+          DOCKER_COMPOSE="docker compose" \
           make build-${{ matrix.component }}
 
       - name: Upload build artifacts

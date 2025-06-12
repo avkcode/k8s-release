@@ -62,6 +62,7 @@ jobs:
           FLANNEL_VERSION=${{ github.event.inputs.flannel_version || 'v0.26.4' }} \
           CALICO_VERSION=${{ github.event.inputs.calico_version || 'v3.28.0' }} \
           PACKAGE_TYPE=${{ github.event.inputs.package_type || 'deb' }} \
+          DOCKER_COMPOSE="docker compose" \
           make build-${{ matrix.component }}
 
       - name: Upload artifacts
