@@ -8,7 +8,7 @@
            width="80">
     </td>
     <td valign="middle">
-    Automation for building Kubernetes using Kubernetes itself as a build farm
+    Building Kubernetes using Kubernetes
     </td>
   </tr>
 </table>
