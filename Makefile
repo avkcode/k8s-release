@@ -116,14 +116,14 @@ define DOCKER_ARGS
 endef
 
 # If KUBE_BUILDER is set to 1, use buildx Kubernetes build farm
-build: check-tools switch-builder
+build: switch-builder
 	@echo "Starting simple build process..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build
 	@$(BUILD_INFO)
 
 # Perform a build without using the cache
-build-no-cache: check-tools switch-builder
+build-no-cache: switch-builder
 	@echo "Starting build process without cache..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build --no-cache
@@ -154,63 +154,63 @@ clean:
 
 # Individual component build targets
 .PHONY: build-kube-proxy
-build-kube-proxy: check-tools switch-builder
+build-kube-proxy: switch-builder
 	@echo "Building kube-proxy..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build kube-proxy-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kubelet
-build-kubelet: check-tools switch-builder
+build-kubelet: switch-builder
 	@echo "Building kubelet..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build kubelet-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-etcd
-build-etcd: check-tools switch-builder
+build-etcd: switch-builder
 	@echo "Building etcd..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build etcd-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-scheduler
-build-kube-scheduler: check-tools switch-builder
+build-kube-scheduler: switch-builder
 	@echo "Building kube-scheduler..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build kube-scheduler-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-controller-manager
-build-kube-controller-manager: check-tools switch-builder
+build-kube-controller-manager: switch-builder
 	@echo "Building kube-controller-manager..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build kube-controller-manager-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kube-apiserver
-build-kube-apiserver: check-tools switch-builder
+build-kube-apiserver: switch-builder
 	@echo "Building kube-apiserver..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build kube-apiserver-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-kubectl
-build-kubectl: check-tools switch-builder
+build-kubectl: switch-builder
 	@echo "Building kubectl..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build kubectl-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-flannel
-build-flannel: check-tools switch-builder
+build-flannel: switch-builder
 	@echo "Building flannel..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build flannel-builder
 	@$(BUILD_INFO)
 
 .PHONY: build-calico
-build-calico: check-tools switch-builder
+build-calico: switch-builder
 	@echo "Building calico..."
 	@$(eval START_TIME := $(shell date +%s))
 	$(DOCKER_ARGS) docker-compose up --build calico-builder

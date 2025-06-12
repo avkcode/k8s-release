@@ -1,3 +1,7 @@
+# K8s Release
+
+<img src="favicon.svg" alt="K8s Release Logo" width="80px" align="right">
+
 # Table of Contents
 - [Rationale](#rationale)
   - [Project Build System](#project-build-system)
