@@ -1,7 +1,5 @@
 # K8s Release
 
-<img src="favicon.svg" alt="K8s Release" width="80px" align="right">
-
 <table>
   <tr>
     <td valign="top" width="100">
