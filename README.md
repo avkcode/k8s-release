@@ -131,19 +131,20 @@ make build-flannel PACKAGE_TYPE=rpm
 
 Example output:
 ```
-flannel-builder-1  | RPM package successfully created at /output/flanneld-0.26.4-1.x86_64.rpm
-flannel-builder-1  | Packages created:
-flannel-builder-1  | total 163928
-flannel-builder-1  | drwxrwxrwx 2 root root     4096 Jun 11 12:48 .
-flannel-builder-1  | drwxr-xr-x 1 root root     4096 Jun 11 12:48 ..
-flannel-builder-1  | -rwxrwxrwx 1 root root 32664867 Jun 11 12:33 etcd
-flannel-builder-1  | -rwxrwxrwx 1 root root 15786038 Jun 11 12:34 etcd-3.5.9-1.x86_64.rpm
-flannel-builder-1  | -rwxrwxrwx 1 root root 13511588 Jun 11 12:33 etcd_3.5.9_amd64.deb
-flannel-builder-1  | -rwxrwxrwx 1 root root 24894369 Jun 11 12:33 etcdctl
-flannel-builder-1  | -rwxrwxrwx 1 root root 12190647 Jun 11 12:34 etcdctl-3.5.9-1.x86_64.rpm
-flannel-builder-1  | -rwxrwxrwx 1 root root 10538840 Jun 11 12:34 etcdctl_3.5.9_amd64.deb
-flannel-builder-1  | -rwxrwxrwx 1 root root 44489368 Jun 11 12:48 flanneld
-flannel-builder-1  | -rwxrwxrwx 1 root root 13763680 Jun 11 12:48 flanneld-0.26.4-1.x86_64.rpm
+calico                                    flanneld
+calico_3.28.0_amd64.deb                   flanneld_0.26.4_amd64.deb
+calico-felix                              kube-apiserver
+calico-felix_3.28.0_amd64.deb             kube-apiserver_1.32.2_amd64.deb
+calico-ipam                               kube-controller-manager
+calico-ipam_3.28.0_amd64.deb              kube-controller-manager_1.32.2_amd64.deb
+calico-kube-controllers                   kubectl
+calico-kube-controllers_3.28.0_amd64.deb  kubectl_1.32.2_amd64.deb
+calico-node                               kubelet
+calico-node_3.28.0_amd64.deb              kubelet_1.32.2_amd64.deb
+etcd                                      kube-proxy
+etcd_3.5.9_amd64.deb                      kube-proxy_1.32.2_amd64.deb
+etcdctl                                   kube-scheduler
+etcdctl_3.5.9_amd64.deb                   kube-scheduler_1.32.2_amd64.deb
 ```
 
 ### Perform a Build Without Cache
