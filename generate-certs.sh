@@ -189,9 +189,86 @@ for pkg in "kubernetes-ca-certs" "kubernetes-apiserver-certs" "kubernetes-contro
   fi
   
   if [ "$PACKAGE_TYPE" = "rpm" ] || [ "$PACKAGE_TYPE" = "all" ]; then
-    # For RPM packages, we would need to implement similar logic as in package-builder.sh
-    # This is a simplified version
-    echo "RPM packaging for certificates not implemented yet"
+    # Create RPM packages
+    echo "Building RPM package for ${pkg}..."
+    
+    # Create RPM build directory structure
+    RPM_BUILD_DIR="/tmp/rpmbuild-${pkg}"
+    mkdir -p ${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+    
+    # Create a tarball of the package contents
+    TARBALL_DIR="/tmp/${pkg}-${VERSION}"
+    mkdir -p ${TARBALL_DIR}
+    
+    # Copy all files from the Debian package directory to the tarball directory
+    cp -r ${PKG_DIR}/* ${TARBALL_DIR}/ 2>/dev/null || true
+    # Remove DEBIAN directory as it's not needed for RPM
+    rm -rf ${TARBALL_DIR}/DEBIAN
+    
+    # Create the tarball
+    cd /tmp
+    tar -czf ${RPM_BUILD_DIR}/SOURCES/${pkg}-${VERSION}.tar.gz ${pkg}-${VERSION}
+    
+    # Create the spec file
+    cat > ${RPM_BUILD_DIR}/SPECS/${pkg}.spec << EOF
+Name:           ${pkg}
+Version:        ${VERSION}
+Release:        1%{?dist}
+Summary:        Kubernetes TLS certificates for ${pkg}
+License:        Apache-2.0
+URL:            https://kubernetes.io
+Source0:        ${pkg}-${VERSION}.tar.gz
+BuildArch:      x86_64
+
+%description
+Kubernetes TLS certificates for ${pkg}
+
+%prep
+%setup -q
+
+%install
+mkdir -p %{buildroot}/
+cp -r * %{buildroot}/
+
+%files
+EOF
+
+    # Add all files to the spec file
+    find ${PKG_DIR} -type f -not -path "*/DEBIAN/*" | while read file; do
+      rel_path=${file#${PKG_DIR}/}
+      if [[ $rel_path == *".key" ]]; then
+        echo "%attr(600, root, root) /${rel_path}" >> ${RPM_BUILD_DIR}/SPECS/${pkg}.spec
+      else
+        echo "%attr(644, root, root) /${rel_path}" >> ${RPM_BUILD_DIR}/SPECS/${pkg}.spec
+      fi
+    done
+    
+    # Add post install script
+    cat >> ${RPM_BUILD_DIR}/SPECS/${pkg}.spec << EOF
+%post
+echo "${pkg} certificates have been installed."
+# Set proper permissions for private keys
+find /etc/kubernetes/pki -name "*.key" -exec chmod 600 {} \; 2>/dev/null || true
+find /var/lib/kubelet -name "*.key" -exec chmod 600 {} \; 2>/dev/null || true
+
+%changelog
+* $(date '+%a %b %d %Y') Kubernetes Packager <maintainer@example.com> - ${VERSION}-1
+- Initial package
+EOF
+
+    # Build the RPM package
+    rpmbuild --define "_topdir ${RPM_BUILD_DIR}" -bb ${RPM_BUILD_DIR}/SPECS/${pkg}.spec
+    
+    # Copy the RPM to the output directory
+    find ${RPM_BUILD_DIR}/RPMS -name "*.rpm" -exec cp {} /output/ \;
+    
+    # Verify the RPM package exists
+    RPM_FILE=$(find /output -name "${pkg}-${VERSION}*.rpm")
+    if [ -n "${RPM_FILE}" ]; then
+      echo "RPM package successfully created at ${RPM_FILE}"
+    else
+      echo "ERROR: RPM package creation failed for ${pkg}!"
+    fi
   fi
 done
 
