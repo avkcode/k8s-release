@@ -1,0 +1,73 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component:
+          - kube-proxy
+          - kubelet
+          - etcd
+          - kube-scheduler
+          - kube-controller-manager
+          - kube-apiserver
+          - kubectl
+          - flannel
+          - calico
+        package_type: [deb, rpm]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract tag version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build ${{ matrix.component }} (${{ matrix.package_type }})
+        run: |
+          KUBE_VERSION=${{ steps.get_version.outputs.VERSION }} \
+          PACKAGE_TYPE=${{ matrix.package_type }} \
+          make build-${{ matrix.component }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.component }}-${{ matrix.package_type }}
+          path: output/
+          retention-days: 7
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release-artifacts
+          find all-artifacts -type f -name "*.deb" -o -name "*.rpm" -o -name "kube*" -o -name "etcd*" -o -name "flannel*" -o -name "calico*" | xargs -I{} cp {} release-artifacts/
+          ls -la release-artifacts/
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-artifacts/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true

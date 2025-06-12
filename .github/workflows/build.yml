@@ -1,0 +1,93 @@
+name: Build Kubernetes Packages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      kube_version:
+        description: 'Kubernetes version to build'
+        required: false
+        default: 'v1.32.2'
+      etcd_version:
+        description: 'etcd version to build'
+        required: false
+        default: 'v3.5.9'
+      flannel_version:
+        description: 'Flannel version to build'
+        required: false
+        default: 'v0.26.4'
+      calico_version:
+        description: 'Calico version to build'
+        required: false
+        default: 'v3.28.0'
+      package_type:
+        description: 'Package type (deb or rpm)'
+        required: false
+        default: 'deb'
+        type: choice
+        options:
+          - deb
+          - rpm
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component:
+          - kube-proxy
+          - kubelet
+          - etcd
+          - kube-scheduler
+          - kube-controller-manager
+          - kube-apiserver
+          - kubectl
+          - flannel
+          - calico
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.component }}
+        run: |
+          KUBE_VERSION=${{ github.event.inputs.kube_version || 'v1.32.2' }} \
+          ETCD_VERSION=${{ github.event.inputs.etcd_version || 'v3.5.9' }} \
+          FLANNEL_VERSION=${{ github.event.inputs.flannel_version || 'v0.26.4' }} \
+          CALICO_VERSION=${{ github.event.inputs.calico_version || 'v3.28.0' }} \
+          PACKAGE_TYPE=${{ github.event.inputs.package_type || 'deb' }} \
+          make build-${{ matrix.component }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.component }}-packages
+          path: output/
+          retention-days: 7
+
+  collect-artifacts:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release-artifacts
+          find all-artifacts -type f -name "*.deb" -o -name "*.rpm" -o -name "kube*" -o -name "etcd*" -o -name "flannel*" -o -name "calico*" | xargs -I{} cp {} release-artifacts/
+
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubernetes-packages
+          path: release-artifacts/
+          retention-days: 7
