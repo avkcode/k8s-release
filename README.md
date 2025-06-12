@@ -1,6 +1,19 @@
 # K8s Release
 
-<img src="favicon.svg" alt="K8s Release Logo" width="80px" align="right">
+<img src="favicon.svg" alt="K8s Release" width="80px" align="right">
+
+<table>
+  <tr>
+    <td valign="top" width="100">
+      <img src="https://raw.githubusercontent.com/avkcode/k8s-release/refs/heads/main/favicon.svg"
+           alt="K8s Release Logo"
+           width="80">
+    </td>
+    <td valign="middle">
+    Automation for building Kubernetes using Kubernetes itself as a build farm
+    </td>
+  </tr>
+</table>
 
 # Table of Contents
 - [Rationale](#rationale)
